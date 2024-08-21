@@ -41,10 +41,10 @@ class _HomeState extends State<Home> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.amber[700],
-        title: Text('VendVibe', style: TextStyle(color: Colors.black),),
+        title: const Text('VendVibe', style: TextStyle(color: Colors.black),),
         actions: [
           IconButton(
-            icon: Icon(Icons.exit_to_app, color: Colors.black,),
+            icon: const Icon(Icons.exit_to_app, color: Colors.black,),
             onPressed: () async {
               await logout();
               Navigator.of(context).pushAndRemoveUntil(
@@ -81,7 +81,7 @@ class _HomeState extends State<Home> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             IconButton(
-              icon: Icon(Icons.home, size: 40, color: Colors.black,),
+              icon: const Icon(Icons.home, size: 40, color: Colors.black,),
               onPressed: () {
                 setState(() {
                   _currentIndex = 0;
@@ -89,7 +89,7 @@ class _HomeState extends State<Home> {
               },
             ),
             IconButton(
-              icon: Icon(Icons.person, size: 40, color: Colors.black,),
+              icon: const Icon(Icons.person, size: 40, color: Colors.black,),
               onPressed: () {
                 setState(() {
                   _currentIndex = 1;

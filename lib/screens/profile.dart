@@ -23,7 +23,7 @@ class _ProfileState extends State<Profile> {
   TextEditingController txtNameController = TextEditingController();
 
   Future getImage() async {
-    final pickedFile = await _picker.getImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null){
       setState(() {
         _imageFile = File(pickedFile.path);
