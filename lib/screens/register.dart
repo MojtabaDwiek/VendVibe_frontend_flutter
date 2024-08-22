@@ -1,14 +1,15 @@
+import 'package:flutter/material.dart';
 import 'package:vendvibe/models/api_response.dart';
 import 'package:vendvibe/models/user.dart';
 import 'package:vendvibe/screens/home.dart';
 import 'package:vendvibe/services/user_service.dart';
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../constant.dart';
 import 'login.dart';
 
 class Register extends StatefulWidget {
+  const Register({super.key});
+
   @override
   _RegisterState createState() => _RegisterState();
 }
@@ -20,11 +21,16 @@ class _RegisterState extends State<Register> {
       nameController = TextEditingController(),
       emailController = TextEditingController(),
       passwordController = TextEditingController(),
-      passwordConfirmController = TextEditingController();
+      passwordConfirmController = TextEditingController(),
+      phoneController = TextEditingController(); // Added phoneController
 
   void _registerUser() async {
     ApiResponse response = await register(
-        nameController.text, emailController.text, passwordController.text);
+        nameController.text,
+        emailController.text,
+        passwordController.text,
+        phoneController.text // Pass phone number
+    );
     if (response.error == null) {
       _saveAndRedirectToHome(response.data as User);
     } else {
@@ -111,6 +117,33 @@ class _RegisterState extends State<Register> {
                 labelText: 'Email',
                 labelStyle: TextStyle(fontSize: 16, color: Colors.amber[700]),
                 prefixIcon: Icon(Icons.mail, color: Colors.amber[700]),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.amber[700]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide(color: Colors.amber[700]!),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.red),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: Colors.red),
+                ),
+              ),
+            ),
+            SizedBox(height: 10),
+            TextFormField(
+              controller: phoneController,
+              keyboardType: TextInputType.phone,
+              validator: (val) => val!.isEmpty ? 'Invalid phone number' : null,
+              decoration: InputDecoration(
+                labelText: 'Phone',
+                labelStyle: TextStyle(fontSize: 16, color: Colors.amber[700]),
+                prefixIcon: Icon(Icons.phone, color: Colors.amber[700]),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide(color: Colors.amber[700]!),
