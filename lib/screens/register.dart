@@ -61,7 +61,7 @@ class _RegisterState extends State<Register> {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
           children: [
-            SizedBox(height: 0), // Adjusted for spacing from the top
+            const SizedBox(height: 0), // Adjusted for spacing from the top
             Padding(
               padding: const EdgeInsets.only(left: 10), // Adjust the left padding as needed
               child: Center(
@@ -71,7 +71,7 @@ class _RegisterState extends State<Register> {
                 ),
               ),
             ),
-            SizedBox(height: 0), // Spacing between logo and text
+            const SizedBox(height: 0), // Spacing between logo and text
             Center(
               child: Text(
                 'Welcome to VendVibe', // Replace with your desired text
@@ -82,7 +82,7 @@ class _RegisterState extends State<Register> {
                 ),
               ),
             ),
-            SizedBox(height: 50), // Adjusted for spacing after the text
+            const SizedBox(height: 50), // Adjusted for spacing after the text
             TextFormField(
               controller: nameController,
               validator: (val) => val!.isEmpty ? 'Invalid name' : null,
@@ -92,7 +92,7 @@ class _RegisterState extends State<Register> {
                 prefixIcon: Icon(Icons.person, color: Colors.amber[700]),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: const Color.fromARGB(255, 115, 115, 115)),
+                  borderSide: const BorderSide(color: Color.fromARGB(255, 115, 115, 115)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
@@ -100,15 +100,15 @@ class _RegisterState extends State<Register> {
                 ),
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.red),
+                  borderSide: const BorderSide(color: Colors.red),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.red),
+                  borderSide: const BorderSide(color: Colors.red),
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextFormField(
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
@@ -127,15 +127,15 @@ class _RegisterState extends State<Register> {
                 ),
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.red),
+                  borderSide: const BorderSide(color: Colors.red),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.red),
+                  borderSide: const BorderSide(color: Colors.red),
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextFormField(
               controller: phoneController,
               keyboardType: TextInputType.phone,
@@ -154,15 +154,15 @@ class _RegisterState extends State<Register> {
                 ),
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.red),
+                  borderSide: const BorderSide(color: Colors.red),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.red),
+                  borderSide: const BorderSide(color: Colors.red),
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextFormField(
               controller: passwordController,
               obscureText: true,
@@ -181,15 +181,15 @@ class _RegisterState extends State<Register> {
                 ),
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.red),
+                  borderSide: const BorderSide(color: Colors.red),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.red),
+                  borderSide: const BorderSide(color: Colors.red),
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextFormField(
               controller: passwordConfirmController,
               obscureText: true,
@@ -208,17 +208,17 @@ class _RegisterState extends State<Register> {
                 ),
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.red),
+                  borderSide: const BorderSide(color: Colors.red),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.red),
+                  borderSide: const BorderSide(color: Colors.red),
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             loading
-                ? Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator())
                 : ElevatedButton(
                     onPressed: () {
                       if (formKey.currentState!.validate()) {
@@ -232,9 +232,9 @@ class _RegisterState extends State<Register> {
                       foregroundColor: Colors.black,
                       backgroundColor: Colors.amber[700], // text color
                     ),
-                    child: Text('Register'),
+                    child: const Text('Register'),
                   ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             kLoginRegisterHint('Already have an account? ', 'Login', () {
               Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (context) => Login()), (route) => false);

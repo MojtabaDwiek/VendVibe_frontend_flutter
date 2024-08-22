@@ -5,6 +5,7 @@ import 'package:vendvibe/models/post.dart';
 import 'package:vendvibe/screens/comment_screen.dart';
 import 'package:vendvibe/services/post_service.dart';
 import 'package:vendvibe/services/user_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'login.dart';
 import 'post_form.dart';
 
@@ -75,6 +76,35 @@ class _PostScreenState extends State<PostScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('${response.error}'),
       ));
+    }
+  }
+
+  Future<void> _launchWhatsApp(String phoneNumber) async {
+    // Debugging statement
+    print('Original phone number: $phoneNumber');
+
+    // Ensure the phone number is not empty
+    if (phoneNumber.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Phone number is not available')),
+      );
+      return;
+    }
+
+    // Prepend +961 if not present
+    if (!phoneNumber.startsWith('+961')) {
+      phoneNumber = '+961$phoneNumber';
+    }
+
+    final url = 'https://wa.me/$phoneNumber';
+    print('WhatsApp URL: $url'); // Debugging statement
+
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not launch WhatsApp')),
+      );
     }
   }
 
@@ -219,6 +249,12 @@ class _PostScreenState extends State<PostScreen> {
                                       postId: post.id,
                                     ),
                                   ));
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.phone, color: Colors.black54),
+                                onPressed: () {
+                                  _launchWhatsApp(post.user?.phoneNumber ?? '');
                                 },
                               ),
                             ],
