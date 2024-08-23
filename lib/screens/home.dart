@@ -36,6 +36,21 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int _currentIndex = 0;
 
+  void showSnackBar(String message) {
+    // Ensure the ScaffoldMessenger is available
+    if (ScaffoldMessenger.maybeOf(context) != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      // Handle the case when ScaffoldMessenger is not available
+      print('ScaffoldMessenger is not available');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,6 +80,7 @@ class _HomeState extends State<Home> {
               ),
             ),
           );
+          showSnackBar('Navigating to Post Form');
         },
         child: Icon(Icons.add, color: Colors.black,),
         backgroundColor: Colors.amber[700],
@@ -75,7 +91,6 @@ class _HomeState extends State<Home> {
         notchMargin: 5,
         elevation: 10,
         clipBehavior: Clip.antiAlias,
-        
         color: Colors.amber[700],
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -86,6 +101,7 @@ class _HomeState extends State<Home> {
                 setState(() {
                   _currentIndex = 0;
                 });
+                showSnackBar('Home selected');
               },
             ),
             IconButton(
@@ -94,6 +110,7 @@ class _HomeState extends State<Home> {
                 setState(() {
                   _currentIndex = 1;
                 });
+                showSnackBar('Profile selected');
               },
             ),
           ],

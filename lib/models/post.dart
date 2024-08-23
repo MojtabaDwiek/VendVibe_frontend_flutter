@@ -19,22 +19,16 @@ class Post {
     this.selfLiked,
   });
 
-// map json to post model
-
-factory Post.fromJson(Map<String, dynamic> json) {
-  return Post(
-    id: json['id'],
-    body: json['body'],
-    image: json['image'],
-    likesCount: json['likes_count'],
-    commentsCount: json['comments_count'],
-    selfLiked: json['likes'].length > 0,
-    user: User(
-      id: json['user']['id'],
-      name: json['user']['name'],
-      image: json['user']['image']
-    )
-  );
-}
-
+  // Convert json data to post model
+  factory Post.fromJson(Map<String, dynamic> json) {
+    return Post(
+      id: json['id'],
+      body: json['body'],
+      image: json['image'],
+      likesCount: json['likes_count'],
+      commentsCount: json['comments_count'],
+      selfLiked: json['likes'].isNotEmpty, // Update to handle empty lists
+      user: User.fromJson(json['user']),
+    );
+  }
 }

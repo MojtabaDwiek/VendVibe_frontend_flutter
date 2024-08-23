@@ -4,7 +4,7 @@ class User {
   String? image;
   String? email;
   String? token;
-  String? phoneNumber; // Add this new property
+  String? phoneNumber;
 
   User({
     this.id,
@@ -12,18 +12,18 @@ class User {
     this.image,
     this.email,
     this.token,
-    this.phoneNumber, // Add this to the constructor
+    this.phoneNumber,
   });
 
-  // Function to convert json data to user model
+  // Convert json data to user model
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['user']['id'],
-      name: json['user']['name'],
-      image: json['user']['image'],
-      email: json['user']['email'],
+      id: json['id'],
+      name: json['name'],
+      image: json['image'],
+      email: json['email'],
       token: json['token'],
-      phoneNumber: json['user']['phone_number'], // Add this to the fromJson method
+      phoneNumber: json['phone_number'],
     );
   }
 
@@ -35,7 +35,7 @@ class User {
       'image': image,
       'email': email,
       'token': token,
-      'phone_number': phoneNumber, // Add this to the toJson method
+      'phone_number': phoneNumber,
     };
   }
 }
