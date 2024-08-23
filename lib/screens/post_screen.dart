@@ -8,6 +8,7 @@ import 'package:vendvibe/services/user_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'login.dart';
 import 'post_form.dart';
+import 'package:flutter/services.dart';
 
 class PostScreen extends StatefulWidget {
   @override
@@ -99,9 +100,18 @@ class _PostScreenState extends State<PostScreen> {
     final url = 'https://wa.me/$phoneNumber';
     print('WhatsApp URL: $url'); // Debugging statement
 
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
+    // Attempt to launch the URL
+    try {
+      final result = await canLaunch(url);
+      if (result) {
+        await launch(url);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch WhatsApp')),
+        );
+      }
+    } on PlatformException catch (e) {
+      print('Error launching WhatsApp: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not launch WhatsApp')),
       );
