@@ -133,18 +133,29 @@ class _PostScreenState extends State<PostScreen> {
               Post post = _postList[index];
               return Stack(
                 children: [
+                  // Background container with black color
                   Positioned.fill(
-                    child: post.image != null
-                        ? Image.network(
-                            '${post.image}',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Center(
-                                  child: Text('Image failed to load'));
-                            },
-                          )
-                        : const SizedBox(),
+                    child: Container(
+                      color: Colors.black,
+                    ),
                   ),
+                  // Image with padding
+                  Positioned.fill(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 50.0),
+                      child: post.image != null
+                          ? Image.network(
+                              '${post.image}',
+                              fit: BoxFit.fitWidth, // Fit width while keeping height unchanged
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Center(
+                                    child: Text('Image failed to load'));
+                              },
+                            )
+                          : const SizedBox(),
+                    ),
+                  ),
+                  // Post details
                   Positioned(
                     bottom: 20,
                     left: 10,
@@ -159,7 +170,7 @@ class _PostScreenState extends State<PostScreen> {
                               backgroundImage: post.user?.image != null
                                   ? NetworkImage('${post.user!.image}')
                                   : null,
-                              backgroundColor: Colors.amber,
+                              backgroundColor: Colors.black,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -175,8 +186,7 @@ class _PostScreenState extends State<PostScreen> {
                             ),
                             if (post.user?.id == userId)
                               PopupMenuButton(
-                                icon: const Icon(Icons.more_vert,
-                                    color: Colors.white),
+                                icon: const Icon(Icons.more_vert, color: Colors.white),
                                 itemBuilder: (context) => [
                                   const PopupMenuItem(
                                     value: 'edit',
@@ -195,7 +205,7 @@ class _PostScreenState extends State<PostScreen> {
                                                   title: 'Edit Post',
                                                   post: post,
                                                 )));
-                                  } else {
+                                  } else if (val == 'delete') {
                                     _handleDeletePost(post.id ?? 0);
                                   }
                                 },
@@ -203,19 +213,12 @@ class _PostScreenState extends State<PostScreen> {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        Text(
-                          '${post.body}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        _buildPostBody(post.body ?? ''),
                         const SizedBox(height: 10),
                       ],
                     ),
                   ),
+                  // Action icons
                   Positioned(
                     right: 10,
                     bottom: 100,
@@ -227,7 +230,7 @@ class _PostScreenState extends State<PostScreen> {
                               : Icons.favorite_outline,
                           color: post.selfLiked == true
                               ? Colors.red
-                              : Colors.amber[900]!,
+                              : Colors.white,
                           count: post.likesCount ?? 0,
                           onTap: () {
                             _handlePostLikeDislike(post.id ?? 0);
@@ -236,7 +239,7 @@ class _PostScreenState extends State<PostScreen> {
                         const SizedBox(height: 20),
                         _buildTikTokIcon(
                           icon: Icons.sms_outlined,
-                          color: Colors.amber[900]!,
+                          color: Colors.white,
                           count: post.commentsCount ?? 0,
                           onTap: () {
                             Navigator.of(context).push(MaterialPageRoute(
@@ -249,7 +252,7 @@ class _PostScreenState extends State<PostScreen> {
                         const SizedBox(height: 20),
                         _buildTikTokIcon(
                           icon: Icons.phone,
-                          color: Colors.amber[900]!,
+                          color: Colors.white,
                           onTap: () {
                             _launchWhatsApp(post.user?.phoneNumber ?? '');
                           },
@@ -263,6 +266,48 @@ class _PostScreenState extends State<PostScreen> {
           );
   }
 
+  Widget _buildPostBody(String body) {
+    bool _isExpanded = false;
+
+    // ignore: dead_code
+    final int? maxLines = _isExpanded ?  null: 2; // Show 2 lines by default
+
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              body,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+              ),
+              maxLines: maxLines,
+              overflow: _isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+            ),
+            if (body.length > 100) // Adjust this length as needed
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isExpanded = !_isExpanded;
+                  });
+                },
+                child: Text(
+                  _isExpanded ? 'View Less' : 'View More',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildTikTokIcon({
     required IconData icon,
     required Color color,
@@ -273,7 +318,7 @@ class _PostScreenState extends State<PostScreen> {
       onTap: onTap,
       child: Column(
         children: [
-          Icon(icon, color: color, size: 40),
+          Icon(icon, color: color, size: 30), // Adjusted icon size
           if (count != null)
             const SizedBox(height: 4),
           if (count != null)

@@ -17,9 +17,12 @@ void main() {
         ),
         floatingActionButtonTheme: FloatingActionButtonThemeData(
           backgroundColor: Colors.amber[700],
-          elevation: 0,  // Remove shadow for a flat look
+          elevation: 0, // Remove shadow for a flat look
+          shape: RoundedRectangleBorder( // Change shape to rounded rectangle
+            borderRadius: BorderRadius.circular(15), // Set border radius to 15
+          ),
         ),
-        bottomAppBarTheme: BottomAppBarTheme(
+        bottomAppBarTheme: const BottomAppBarTheme(
           color: Colors.black,
           elevation: 0, // Remove shadow for a flat look
         ),
@@ -29,7 +32,7 @@ void main() {
           unselectedItemColor: Colors.white70, // Unselected item color
           showUnselectedLabels: true,
           selectedLabelStyle: TextStyle(color: Colors.amber[700]), // Label color when selected
-          unselectedLabelStyle: TextStyle(color: Colors.white70), // Label color when not selected
+          unselectedLabelStyle: const TextStyle(color: Colors.white70), // Label color when not selected
         ),
       ),
       home: Home(),
@@ -45,12 +48,22 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int _currentIndex = 0;
 
+  Future<void> _refreshPage() async {
+    // Your refresh logic here, e.g., retrieving posts
+    setState(() {
+      // Trigger the refresh
+      // This is where you would typically call a function to refresh data.
+      // For demonstration, we'll just use a delay here.
+      Future.delayed(Duration(seconds: 2));
+    });
+  }
+
   void showSnackBar(String message) {
     if (ScaffoldMessenger.maybeOf(context) != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
         ),
       );
     } else {
@@ -59,10 +72,17 @@ class _HomeState extends State<Home> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // Trigger refresh when the page is opened
+    _refreshPage();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'VendVibe',
           style: TextStyle(
             color: Colors.white,
@@ -83,7 +103,7 @@ class _HomeState extends State<Home> {
         elevation: 5,
         actions: [
           IconButton(
-            icon: Icon(Icons.power_settings_new, color: Colors.white),
+            icon: const Icon(Icons.power_settings_new, color: Colors.white),
             onPressed: () async {
               await logout();
               Navigator.of(context).pushAndRemoveUntil(
@@ -94,7 +114,10 @@ class _HomeState extends State<Home> {
           ),
         ],
       ),
-      body: _currentIndex == 0 ? PostScreen() : Profile(),
+      body: RefreshIndicator(
+        onRefresh: _refreshPage,
+        child: _currentIndex == 0 ? const PostScreen() : Profile(),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).push(
@@ -106,11 +129,13 @@ class _HomeState extends State<Home> {
           );
           showSnackBar('Navigating to Post Form');
         },
-        child: Icon(Icons.add, color: Colors.black),
-        shape: CircleBorder(), // Modern circle shape
-        backgroundColor: Colors.amber[900]!,
+        child: Icon(Icons.add, color: Colors.amber[900]!),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15), // Rounded rectangle shape
+        ),
+        backgroundColor: Colors.white,
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonLocation: CustomFloatingActionButtonLocation(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
@@ -120,11 +145,11 @@ class _HomeState extends State<Home> {
           showSnackBar(index == 0 ? 'Home selected' : 'Profile selected');
         },
         items: [
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Profile',
           ),
@@ -133,9 +158,19 @@ class _HomeState extends State<Home> {
         backgroundColor: Colors.amber[900]!, // Background color to match app bar
         selectedItemColor: Colors.black, // Selected item color
         unselectedItemColor: Colors.white70, // Unselected item color
-        selectedLabelStyle: TextStyle(color: Colors.white), // Color of selected label
-        unselectedLabelStyle: TextStyle(color: Colors.white), // Color of unselected label
+        selectedLabelStyle: const TextStyle(color: Colors.white), // Color of selected label
+        unselectedLabelStyle: const TextStyle(color: Colors.white), // Color of unselected label
       ),
     );
+  }
+}
+
+class CustomFloatingActionButtonLocation extends FloatingActionButtonLocation {
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
+    // Position the FAB lower down on the screen
+    double fabX = (scaffoldGeometry.scaffoldSize.width - scaffoldGeometry.floatingActionButtonSize.width) / 2;
+    double fabY = scaffoldGeometry.scaffoldSize.height - scaffoldGeometry.floatingActionButtonSize.height - 10;
+    return Offset(fabX, fabY);
   }
 }
