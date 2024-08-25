@@ -11,16 +11,25 @@ void main() {
     MaterialApp(
       title: 'VendVibe',
       theme: ThemeData(
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.amber,
-          titleTextStyle: TextStyle(color: Colors.black),
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.black,
+          titleTextStyle: TextStyle(color: Colors.amber[700]),
         ),
         floatingActionButtonTheme: FloatingActionButtonThemeData(
           backgroundColor: Colors.amber[700],
+          elevation: 0,  // Remove shadow for a flat look
         ),
         bottomAppBarTheme: BottomAppBarTheme(
-          color: Colors.amber[700],
-          elevation: 10,
+          color: Colors.black,
+          elevation: 0, // Remove shadow for a flat look
+        ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: Colors.black, // Background color of the bottom navigation bar
+          selectedItemColor: Colors.amber[700], // Selected item color
+          unselectedItemColor: Colors.white70, // Unselected item color
+          showUnselectedLabels: true,
+          selectedLabelStyle: TextStyle(color: Colors.amber[700]), // Label color when selected
+          unselectedLabelStyle: TextStyle(color: Colors.white70), // Label color when not selected
         ),
       ),
       home: Home(),
@@ -37,7 +46,6 @@ class _HomeState extends State<Home> {
   int _currentIndex = 0;
 
   void showSnackBar(String message) {
-    // Ensure the ScaffoldMessenger is available
     if (ScaffoldMessenger.maybeOf(context) != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -46,7 +54,6 @@ class _HomeState extends State<Home> {
         ),
       );
     } else {
-      // Handle the case when ScaffoldMessenger is not available
       print('ScaffoldMessenger is not available');
     }
   }
@@ -55,11 +62,28 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.amber[700],
-        title: const Text('VendVibe', style: TextStyle(color: Colors.black),),
+        title: Text(
+          'VendVibe',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.amber[700]!, Colors.amber[900]!],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        elevation: 5,
         actions: [
           IconButton(
-            icon: const Icon(Icons.exit_to_app, color: Colors.black,),
+            icon: Icon(Icons.power_settings_new, color: Colors.white),
             onPressed: () async {
               await logout();
               Navigator.of(context).pushAndRemoveUntil(
@@ -82,39 +106,35 @@ class _HomeState extends State<Home> {
           );
           showSnackBar('Navigating to Post Form');
         },
-        child: Icon(Icons.add, color: Colors.black,),
-        backgroundColor: Colors.amber[700],
-        shape: const CircleBorder(),
+        child: Icon(Icons.add, color: Colors.black),
+        shape: CircleBorder(), // Modern circle shape
+        backgroundColor: Colors.amber[900]!,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        notchMargin: 5,
-        elevation: 10,
-        clipBehavior: Clip.antiAlias,
-        color: Colors.amber[700],
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.home, size: 40, color: Colors.black,),
-              onPressed: () {
-                setState(() {
-                  _currentIndex = 0;
-                });
-                showSnackBar('Home selected');
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.person, size: 40, color: Colors.black,),
-              onPressed: () {
-                setState(() {
-                  _currentIndex = 1;
-                });
-                showSnackBar('Profile selected');
-              },
-            ),
-          ],
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+          showSnackBar(index == 0 ? 'Home selected' : 'Profile selected');
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.amber[900]!, // Background color to match app bar
+        selectedItemColor: Colors.black, // Selected item color
+        unselectedItemColor: Colors.white70, // Unselected item color
+        selectedLabelStyle: TextStyle(color: Colors.white), // Color of selected label
+        unselectedLabelStyle: TextStyle(color: Colors.white), // Color of unselected label
       ),
     );
   }

@@ -83,10 +83,8 @@ class _PostScreenState extends State<PostScreen> {
   }
 
   Future<void> _launchWhatsApp(String phoneNumber) async {
-    // Debugging statement
     print('Original phone number: $phoneNumber');
 
-    // Ensure the phone number is not empty
     if (phoneNumber.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Phone number is not available')),
@@ -94,15 +92,13 @@ class _PostScreenState extends State<PostScreen> {
       return;
     }
 
-    // Prepend +961 if not present
     if (!phoneNumber.startsWith('+961')) {
       phoneNumber = '+961$phoneNumber';
     }
 
     final url = 'https://wa.me/$phoneNumber';
-    print('WhatsApp URL: $url'); // Debugging statement
+    print('WhatsApp URL: $url');
 
-    // Attempt to launch the URL
     try {
       final result = await canLaunch(url);
       if (result) {
@@ -130,154 +126,166 @@ class _PostScreenState extends State<PostScreen> {
   Widget build(BuildContext context) {
     return _loading
         ? const Center(child: CircularProgressIndicator())
-        : RefreshIndicator(
-            onRefresh: () => retrievePosts(),
-            child: Container(
-              color: Colors.grey[700],
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2, // Number of columns
-                  crossAxisSpacing: 8.0, // Spacing between columns
-                  mainAxisSpacing: 8.0, // Spacing between rows
-                  childAspectRatio: 0.75, // Aspect ratio of the items
-                ),
-                padding: const EdgeInsets.all(10.0),
-                itemCount: _postList.length,
-                itemBuilder: (BuildContext context, int index) {
-                  Post post = _postList[index];
-                  return Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 4,
+        : PageView.builder(
+            scrollDirection: Axis.vertical,
+            itemCount: _postList.length,
+            itemBuilder: (BuildContext context, int index) {
+              Post post = _postList[index];
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    child: post.image != null
+                        ? Image.network(
+                            '${post.image}',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Center(
+                                  child: Text('Image failed to load'));
+                            },
+                          )
+                        : const SizedBox(),
+                  ),
+                  Positioned(
+                    bottom: 20,
+                    left: 10,
+                    right: 10,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 15,
-                                      backgroundImage: post.user?.image != null
-                                          ? NetworkImage('${post.user!.image}')
-                                          : null,
-                                      backgroundColor: Colors.amber,
-                                    ),
-                                    const SizedBox(width: 8), // Reduced padding
-                                    Expanded(
-                                      child: Text(
-                                        post.user?.name ?? 'Unknown',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14,
-                                        ),
-                                        overflow: TextOverflow.ellipsis, // Ensure text does not overflow
-                                      ),
-                                    ),
-                                  ],
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundImage: post.user?.image != null
+                                  ? NetworkImage('${post.user!.image}')
+                                  : null,
+                              backgroundColor: Colors.amber,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                post.user?.name ?? 'Unknown',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
                                 ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              if (post.user?.id == userId)
-                                PopupMenuButton(
-                                  icon: const Icon(Icons.more_vert, color: Colors.black),
-                                  itemBuilder: (context) => [
-                                    const PopupMenuItem(
-                                      value: 'edit',
-                                      child: Text('Edit'),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text('Delete'),
-                                    ),
-                                  ],
-                                  onSelected: (val) {
-                                    if (val == 'edit') {
-                                      Navigator.of(context).push(MaterialPageRoute(
-                                        builder: (context) => PostForm(
-                                          title: 'Edit Post',
-                                          post: post,
-                                        ),
-                                      ));
-                                    } else {
-                                      _handleDeletePost(post.id ?? 0);
-                                    }
-                                  },
-                                ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.all(8.0),
-                            child: post.image != null
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      '${post.image}',
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return const Center(child: Text('Image failed to load'));
-                                      },
-                                    ),
-                                  )
-                                : const SizedBox(),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0),
-                          child: Text(
-                            '${post.body}',
-                            style: const TextStyle(fontSize: 12),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              kLikeAndComment(
-                                post.likesCount ?? 0,
-                                post.selfLiked == true ? Icons.favorite : Icons.favorite_outline,
-                                post.selfLiked == true ? Colors.red : Colors.black54,
-                                () {
-                                  _handlePostLikeDislike(post.id ?? 0);
+                            ),
+                            if (post.user?.id == userId)
+                              PopupMenuButton(
+                                icon: const Icon(Icons.more_vert,
+                                    color: Colors.white),
+                                itemBuilder: (context) => [
+                                  const PopupMenuItem(
+                                    value: 'edit',
+                                    child: Text('Edit'),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'delete',
+                                    child: Text('Delete'),
+                                  ),
+                                ],
+                                onSelected: (val) {
+                                  if (val == 'edit') {
+                                    Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                            builder: (context) => PostForm(
+                                                  title: 'Edit Post',
+                                                  post: post,
+                                                )));
+                                  } else {
+                                    _handleDeletePost(post.id ?? 0);
+                                  }
                                 },
                               ),
-                              kLikeAndComment(
-                                post.commentsCount ?? 0,
-                                Icons.sms_outlined,
-                                Colors.black54,
-                                () {
-                                  Navigator.of(context).push(MaterialPageRoute(
-                                    builder: (context) => CommentScreen(
-                                      postId: post.id,
-                                    ),
-                                  ));
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.phone, color: Colors.black54),
-                                onPressed: () {
-                                  _launchWhatsApp(post.user?.phoneNumber ?? '');
-                                },
-                              ),
-                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          '${post.body}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    right: 10,
+                    bottom: 100,
+                    child: Column(
+                      children: [
+                        _buildTikTokIcon(
+                          icon: post.selfLiked == true
+                              ? Icons.favorite
+                              : Icons.favorite_outline,
+                          color: post.selfLiked == true
+                              ? Colors.red
+                              : Colors.amber[900]!,
+                          count: post.likesCount ?? 0,
+                          onTap: () {
+                            _handlePostLikeDislike(post.id ?? 0);
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        _buildTikTokIcon(
+                          icon: Icons.sms_outlined,
+                          color: Colors.amber[900]!,
+                          count: post.commentsCount ?? 0,
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => CommentScreen(
+                                postId: post.id,
+                              ),
+                            ));
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        _buildTikTokIcon(
+                          icon: Icons.phone,
+                          color: Colors.amber[900]!,
+                          onTap: () {
+                            _launchWhatsApp(post.user?.phoneNumber ?? '');
+                          },
                         ),
                       ],
                     ),
-                  );
-                },
+                  ),
+                ],
+              );
+            },
+          );
+  }
+
+  Widget _buildTikTokIcon({
+    required IconData icon,
+    required Color color,
+    int? count,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 40),
+          if (count != null)
+            const SizedBox(height: 4),
+          if (count != null)
+            Text(
+              '$count',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
               ),
             ),
-          );
+        ],
+      ),
+    );
   }
 }
