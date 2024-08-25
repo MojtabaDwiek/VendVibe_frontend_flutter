@@ -84,7 +84,7 @@ class _ProfileState extends State<Profile> {
   
   @override
   Widget build(BuildContext context) {
-    return loading ? Center(child: CircularProgressIndicator(),) :
+    return loading ? const Center(child: CircularProgressIndicator(),) :
     Padding(
       padding: EdgeInsets.only(top: 40, left: 40, right: 40),
       child: ListView(

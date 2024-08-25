@@ -11,6 +11,8 @@ import 'post_form.dart';
 import 'package:flutter/services.dart';
 
 class PostScreen extends StatefulWidget {
+  const PostScreen({super.key});
+
   @override
   _PostScreenState createState() => _PostScreenState();
 }
