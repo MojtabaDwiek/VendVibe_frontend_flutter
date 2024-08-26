@@ -42,9 +42,11 @@ class _PostScreenState extends State<PostScreen> {
         );
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('${response.error}'),
-      ));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('${response.error}'),
+        ));
+      }
     }
   }
 
@@ -60,9 +62,11 @@ class _PostScreenState extends State<PostScreen> {
         );
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('${response.error}'),
-      ));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('${response.error}'),
+        ));
+      }
     }
   }
 
@@ -79,9 +83,11 @@ class _PostScreenState extends State<PostScreen> {
         );
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('${response.error}'),
-      ));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('${response.error}'),
+        ));
+      }
     }
   }
 
@@ -89,9 +95,11 @@ class _PostScreenState extends State<PostScreen> {
     print('Original phone number: $phoneNumber');
 
     if (phoneNumber.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Phone number is not available')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Phone number is not available')),
+        );
+      }
       return;
     }
 
@@ -107,15 +115,19 @@ class _PostScreenState extends State<PostScreen> {
       if (result) {
         await launch(url);
       } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not launch WhatsApp')),
+          );
+        }
+      }
+    } on PlatformException catch (e) {
+      print('Error launching WhatsApp: $e');
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not launch WhatsApp')),
         );
       }
-    } on PlatformException catch (e) {
-      print('Error launching WhatsApp: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not launch WhatsApp')),
-      );
     }
   }
 
@@ -142,17 +154,22 @@ class _PostScreenState extends State<PostScreen> {
                       color: Colors.black,
                     ),
                   ),
-                  // Image with padding
+                  // Image carousel
                   Positioned.fill(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 50.0),
-                      child: post.image != null
-                          ? Image.network(
-                              '${post.image}',
-                              fit: BoxFit.fitWidth,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Center(
-                                    child: Text('Image failed to load'));
+                      child: post.images != null && post.images!.isNotEmpty
+                          ? PageView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: post.images!.length,
+                              itemBuilder: (context, imgIndex) {
+                                return Image.network(
+                                  '${post.images![imgIndex]}',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Center(child: Text('Image failed to load'));
+                                  },
+                                );
                               },
                             )
                           : const SizedBox(),
@@ -166,6 +183,24 @@ class _PostScreenState extends State<PostScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Display price if available
+                        if (post.price != null)
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.amber[900]!,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '\$${post.price!.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 10),
                         Row(
                           children: [
                             CircleAvatar(
@@ -203,11 +238,13 @@ class _PostScreenState extends State<PostScreen> {
                                 onSelected: (val) {
                                   if (val == 'edit') {
                                     Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                            builder: (context) => PostForm(
-                                                  title: 'Edit Post',
-                                                  post: post,
-                                                )));
+                                      MaterialPageRoute(
+                                        builder: (context) => PostForm(
+                                          title: 'Edit Post',
+                                          post: post,
+                                        ),
+                                      ),
+                                    );
                                   } else if (val == 'delete') {
                                     _handleDeletePost(post.id ?? 0);
                                   }

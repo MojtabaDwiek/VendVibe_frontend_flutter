@@ -1,10 +1,4 @@
-
-
-
-
-
 import 'dart:convert';
-
 import 'package:vendvibe/models/api_response.dart';
 import 'package:vendvibe/models/post.dart';
 import 'package:vendvibe/services/user_service.dart';
@@ -12,22 +6,33 @@ import 'package:http/http.dart' as http;
 
 import '../constant.dart';
 
-// get all posts
+// Get all posts
 Future<ApiResponse> getPosts() async {
   ApiResponse apiResponse = ApiResponse();
   try {
     String token = await getToken();
-    final response = await http.get(Uri.parse(postsURL),
-    headers: {
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token'
-    });
+    final response = await http.get(
+      Uri.parse(postsURL),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
 
-    switch(response.statusCode){
+    switch (response.statusCode) {
       case 200:
-        apiResponse.data = jsonDecode(response.body)['posts'].map((p) => Post.fromJson(p)).toList();
-        // we get list of posts, so we need to map each item to post model
-        apiResponse.data as List<dynamic>;
+        final data = jsonDecode(response.body);
+        final List<dynamic> postsJson = data['posts'];
+
+        // Handle type conversion issues
+        apiResponse.data = postsJson.map((p) {
+          try {
+            return Post.fromJson(p);
+          } catch (e) {
+            print('Error parsing post: $e');
+            return null; // Handle or ignore errors as needed
+          }
+        }).where((post) => post != null).toList();
         break;
       case 401:
         apiResponse.error = unauthorized;
@@ -36,33 +41,33 @@ Future<ApiResponse> getPosts() async {
         apiResponse.error = somethingWentWrong;
         break;
     }
-  }
-  catch (e){
+  } catch (e) {
+    print('Error fetching posts: $e'); // Log error
     apiResponse.error = serverError;
   }
   return apiResponse;
 }
 
-
 // Create post
-Future<ApiResponse> createPost(String body, String? image) async {
+Future<ApiResponse> createPost(String body, List<String>? images, double? price) async {
   ApiResponse apiResponse = ApiResponse();
   try {
     String token = await getToken();
-    final response = await http.post(Uri.parse(postsURL),
-    headers: {
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token'
-    }, body: image !=null ? {
-      'body': body,
-      'image': image
-    } : {
-      'body': body
-    });
+    final response = await http.post(
+      Uri.parse(postsURL),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json', // Make sure to specify the content type
+      },
+      body: jsonEncode({
+        'body': body,
+        'images': images ?? [], // Handle null by using empty list
+        'price': price ?? 0, // Handle null by using default value
+      }),
+    );
 
-    // here if the image is null we just send the body, if not null we send the image too
-
-    switch(response.statusCode){
+    switch (response.statusCode) {
       case 200:
         apiResponse.data = jsonDecode(response.body);
         break;
@@ -74,33 +79,36 @@ Future<ApiResponse> createPost(String body, String? image) async {
         apiResponse.error = unauthorized;
         break;
       default:
-        print(response.body);
         apiResponse.error = somethingWentWrong;
         break;
     }
-  }
-  catch (e){
+  } catch (e) {
+    print('Error creating post: $e'); // Log error
     apiResponse.error = serverError;
   }
   return apiResponse;
 }
 
-
-
 // Edit post
-Future<ApiResponse> editPost(int postId, String body) async {
+Future<ApiResponse> editPost(int postId, String body, List<String>? images, double? price) async {
   ApiResponse apiResponse = ApiResponse();
   try {
     String token = await getToken();
-    final response = await http.put(Uri.parse('$postsURL/$postId'),
-    headers: {
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token'
-    }, body: {
-      'body': body
-    });
+    final response = await http.put(
+      Uri.parse('$postsURL/$postId'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json', // Make sure to specify the content type
+      },
+      body: jsonEncode({
+        'body': body,
+        'images': images ?? [], // Handle null by using empty list
+        'price': price ?? 0, // Handle null by using default value
+      }),
+    );
 
-    switch(response.statusCode){
+    switch (response.statusCode) {
       case 200:
         apiResponse.data = jsonDecode(response.body)['message'];
         break;
@@ -114,26 +122,27 @@ Future<ApiResponse> editPost(int postId, String body) async {
         apiResponse.error = somethingWentWrong;
         break;
     }
-  }
-  catch (e){
+  } catch (e) {
+    print('Error editing post: $e'); // Log error
     apiResponse.error = serverError;
   }
   return apiResponse;
 }
-
 
 // Delete post
 Future<ApiResponse> deletePost(int postId) async {
   ApiResponse apiResponse = ApiResponse();
   try {
     String token = await getToken();
-    final response = await http.delete(Uri.parse('$postsURL/$postId'),
-    headers: {
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token'
-    });
+    final response = await http.delete(
+      Uri.parse('$postsURL/$postId'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
 
-    switch(response.statusCode){
+    switch (response.statusCode) {
       case 200:
         apiResponse.data = jsonDecode(response.body)['message'];
         break;
@@ -147,26 +156,27 @@ Future<ApiResponse> deletePost(int postId) async {
         apiResponse.error = somethingWentWrong;
         break;
     }
-  }
-  catch (e){
+  } catch (e) {
+    print('Error deleting post: $e'); // Log error
     apiResponse.error = serverError;
   }
   return apiResponse;
 }
-
 
 // Like or unlike post
 Future<ApiResponse> likeUnlikePost(int postId) async {
   ApiResponse apiResponse = ApiResponse();
   try {
     String token = await getToken();
-    final response = await http.post(Uri.parse('$postsURL/$postId/likes'),
-    headers: {
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token'
-    });
+    final response = await http.post(
+      Uri.parse('$postsURL/$postId/likes'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
 
-    switch(response.statusCode){
+    switch (response.statusCode) {
       case 200:
         apiResponse.data = jsonDecode(response.body)['message'];
         break;
@@ -177,8 +187,8 @@ Future<ApiResponse> likeUnlikePost(int postId) async {
         apiResponse.error = somethingWentWrong;
         break;
     }
-  }
-  catch (e){
+  } catch (e) {
+    print('Error liking/unliking post: $e'); // Log error
     apiResponse.error = serverError;
   }
   return apiResponse;

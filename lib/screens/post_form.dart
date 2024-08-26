@@ -26,20 +26,30 @@ class PostForm extends StatefulWidget {
 class _PostFormState extends State<PostForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _txtControllerBody = TextEditingController();
+  final TextEditingController _txtControllerPrice = TextEditingController();
   bool _loading = false;
-  File? _imageFile;
+  List<File> _imageFiles = [];
   final _picker = ImagePicker();
 
-  // Request gallery permissions
+  @override
+  void initState() {
+    super.initState();
+    if (widget.post != null) {
+      _txtControllerBody.text = widget.post!.body ?? '';
+      _txtControllerPrice.text = widget.post!.price?.toString() ?? '';
+      // Handle images if post contains any
+      // Add logic here if needed
+    }
+  }
+
   Future<void> requestPermission() async {
     final status = await Permission.photos.request();
-
     if (status.isGranted) {
-      getImage();
+      getImages();
     } else if (status.isDenied) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Gallery access is required to select an image. Please enable it in settings.'),
+          content: Text('Gallery access is required to select images. Please enable it in settings.'),
         ),
       );
     } else if (status.isPermanentlyDenied) {
@@ -52,36 +62,27 @@ class _PostFormState extends State<PostForm> {
     }
   }
 
-  // Pick image from gallery and resize it
-  Future<void> getImage() async {
+  Future<void> getImages() async {
     try {
-      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-      if (pickedFile != null) {
+      final pickedFiles = await _picker.pickMultiImage();
+      List<File> imageFiles = [];
+      for (var pickedFile in pickedFiles) {
         File imageFile = File(pickedFile.path);
-
-        // Resize the image
         final resizedImage = await resizeImage(imageFile);
-
-        setState(() {
-          _imageFile = resizedImage;
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No image selected.'),
-          ),
-        );
+        imageFiles.add(resizedImage);
       }
+      setState(() {
+        _imageFiles = imageFiles;
+      });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to pick image: $e'),
+          content: Text('Failed to pick images: $e'),
         ),
       );
     }
   }
 
-  // Resize the image
   Future<File> resizeImage(File file) async {
     final result = await FlutterImageCompress.compressWithFile(
       file.absolute.path,
@@ -89,67 +90,92 @@ class _PostFormState extends State<PostForm> {
       minHeight: 600,
       quality: 88,
     );
-
     final resizedFile = File(file.path)..writeAsBytesSync(result!);
     return resizedFile;
   }
 
-  // Convert image file to base64 string
-  Future<String?> getStringImage(File? imageFile) async {
-    if (imageFile == null) return null;
-    Uint8List imageBytes = await imageFile.readAsBytes();
-    return base64Encode(imageBytes);
+  Future<List<String>> getStringImages() async {
+    List<String> base64Images = [];
+    for (var imageFile in _imageFiles) {
+      Uint8List imageBytes = await imageFile.readAsBytes();
+      base64Images.add(base64Encode(imageBytes));
+    }
+    return base64Images;
   }
 
-  // Create a new post
   void _createPost() async {
-    String? image = await getStringImage(_imageFile);
-    ApiResponse response = await createPost(_txtControllerBody.text, image);
+    if (!_formKey.currentState!.validate()) {
+      print("Form validation failed.");
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+    });
+
+    List<String> images = await getStringImages();
+    print("Creating post with body: ${_txtControllerBody.text}");
+    ApiResponse response = await createPost(
+      _txtControllerBody.text,
+      images.isNotEmpty ? images : null,
+      _txtControllerPrice.text.isNotEmpty ? double.tryParse(_txtControllerPrice.text) : null,
+    );
+
+    setState(() {
+      _loading = false;
+    });
 
     if (response.error == null) {
       Navigator.of(context).pop();
     } else if (response.error == unauthorized) {
-      logout().then((value) => {
-            Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => Login()),
-                (route) => false)
-          });
+      await logout();
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => Login()),
+        (route) => false,
+      );
     } else {
+      print("API Response Error: ${response.error}");
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('${response.error}'),
       ));
-      setState(() {
-        _loading = !_loading;
-      });
     }
   }
 
-  // Edit an existing post
   void _editPost(int postId) async {
-    ApiResponse response = await editPost(postId, _txtControllerBody.text);
+    if (!_formKey.currentState!.validate()) {
+      print("Form validation failed.");
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+    });
+
+    List<String> images = await getStringImages();
+    ApiResponse response = await editPost(
+      postId,
+      _txtControllerBody.text,
+      images.isNotEmpty ? images : null,
+      _txtControllerPrice.text.isNotEmpty ? double.tryParse(_txtControllerPrice.text) : null,
+    );
+
+    setState(() {
+      _loading = false;
+    });
+
     if (response.error == null) {
       Navigator.of(context).pop();
     } else if (response.error == unauthorized) {
-      logout().then((value) => {
-            Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => Login()),
-                (route) => false)
-          });
+      await logout();
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => Login()),
+        (route) => false,
+      );
     } else {
+      print("API Response Error: ${response.error}");
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('${response.error}'),
       ));
-      setState(() {
-        _loading = !_loading;
-      });
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.post != null) {
-      _txtControllerBody.text = widget.post!.body ?? '';
     }
   }
 
@@ -171,10 +197,10 @@ class _PostFormState extends State<PostForm> {
                         width: MediaQuery.of(context).size.width,
                         height: 200,
                         decoration: BoxDecoration(
-                            image: _imageFile == null
+                            image: _imageFiles.isEmpty
                                 ? null
                                 : DecorationImage(
-                                    image: FileImage(_imageFile!),
+                                    image: FileImage(_imageFiles.first),
                                     fit: BoxFit.cover)),
                         child: Center(
                           child: IconButton(
@@ -187,15 +213,34 @@ class _PostFormState extends State<PostForm> {
                   key: _formKey,
                   child: Padding(
                     padding: EdgeInsets.all(8),
-                    child: TextFormField(
-                      controller: _txtControllerBody,
-                      keyboardType: TextInputType.multiline,
-                      maxLines: 9,
-                      validator: (val) => val!.isEmpty ? 'Post body is required' : null,
-                      decoration: const InputDecoration(
-                          hintText: "Post body...",
-                          border: OutlineInputBorder(
-                              borderSide: BorderSide(width: 1, color: Colors.black38))),
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _txtControllerBody,
+                          keyboardType: TextInputType.multiline,
+                          maxLines: 9,
+                          validator: (val) {
+                            print('Validating body: $val'); // Debugging line
+                            if (val == null || val.isEmpty) {
+                              return 'Post body is required';
+                            }
+                            return null;
+                          },
+                          decoration: const InputDecoration(
+                              hintText: "Post body...",
+                              border: OutlineInputBorder(
+                                  borderSide: BorderSide(width: 1, color: Colors.black38))),
+                        ),
+                        SizedBox(height: 10),
+                        TextFormField(
+                          controller: _txtControllerPrice,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                              hintText: "Price (optional)",
+                              border: OutlineInputBorder(
+                                  borderSide: BorderSide(width: 1, color: Colors.black38))),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -203,22 +248,17 @@ class _PostFormState extends State<PostForm> {
                   padding: EdgeInsets.symmetric(horizontal: 8),
                   child: ElevatedButton(
                     onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        setState(() {
-                          _loading = !_loading;
-                        });
-                        if (widget.post == null) {
-                          _createPost();
-                        } else {
-                          _editPost(widget.post!.id ?? 0);
-                        }
+                      if (widget.post == null) {
+                        _createPost();
+                      } else {
+                        _editPost(widget.post!.id ?? 0);
                       }
                     },
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.white,
                       backgroundColor: Colors.amber, // text color
                     ),
-                    child: Text('Post'),
+                    child: Text(widget.post == null ? 'Create Post' : 'Update Post'),
                   ),
                 )
               ],

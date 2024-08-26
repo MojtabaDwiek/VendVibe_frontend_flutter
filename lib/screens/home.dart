@@ -50,25 +50,25 @@ class _HomeState extends State<Home> {
 
   Future<void> _refreshPage() async {
     // Your refresh logic here, e.g., retrieving posts
+    await Future.delayed(Duration(seconds: 2));
     setState(() {
       // Trigger the refresh
-      // This is where you would typically call a function to refresh data.
-      // For demonstration, we'll just use a delay here.
-      Future.delayed(Duration(seconds: 2));
     });
   }
 
   void showSnackBar(String message) {
-    if (ScaffoldMessenger.maybeOf(context) != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    } else {
-      print('ScaffoldMessenger is not available');
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ScaffoldMessenger.maybeOf(context) != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        print('ScaffoldMessenger is not available');
+      }
+    });
   }
 
   @override
