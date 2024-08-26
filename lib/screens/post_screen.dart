@@ -22,6 +22,9 @@ class _PostScreenState extends State<PostScreen> {
   int userId = 0;
   bool _loading = true;
 
+  // Track the expanded state for each post
+  final Map<int, bool> _postExpansionStates = {};
+
   Future<void> retrievePosts() async {
     userId = await getUserId();
     ApiResponse response = await getPosts();
@@ -146,7 +149,7 @@ class _PostScreenState extends State<PostScreen> {
                       child: post.image != null
                           ? Image.network(
                               '${post.image}',
-                              fit: BoxFit.fitWidth, // Fit width while keeping height unchanged
+                              fit: BoxFit.fitWidth,
                               errorBuilder: (context, error, stackTrace) {
                                 return const Center(
                                     child: Text('Image failed to load'));
@@ -213,7 +216,7 @@ class _PostScreenState extends State<PostScreen> {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        _buildPostBody(post.body ?? ''),
+                        _buildPostBody(post.body ?? '', post.id ?? 0),
                         const SizedBox(height: 10),
                       ],
                     ),
@@ -266,46 +269,61 @@ class _PostScreenState extends State<PostScreen> {
           );
   }
 
-  Widget _buildPostBody(String body) {
-    bool _isExpanded = false;
+  Widget _buildPostBody(String body, int postId) {
+    bool _isExpanded = _postExpansionStates[postId] ?? false;
 
-    // ignore: dead_code
-    final int? maxLines = _isExpanded ?  null: 2; // Show 2 lines by default
-
-    return StatefulBuilder(
-      builder: (context, setState) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              body,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
+    return Container(
+      decoration: BoxDecoration(
+        color: _isExpanded ? Colors.grey[800] : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: _isExpanded ? double.infinity : 100,
               ),
-              maxLines: maxLines,
-              overflow: _isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
-            ),
-            if (body.length > 100) // Adjust this length as needed
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _isExpanded = !_isExpanded;
-                  });
-                },
+              child: SingleChildScrollView(
                 child: Text(
-                  _isExpanded ? 'View Less' : 'View More',
+                  _isExpanded ? body : _truncateText(body, 20),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-          ],
-        );
-      },
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _postExpansionStates[postId] = !_isExpanded;
+              });
+            },
+            child: Text(
+              _isExpanded ? 'View Less' : 'View More',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  String _truncateText(String text, int maxLength) {
+    if (text.length > maxLength) {
+      return '${text.substring(0, maxLength)}...';
+    }
+    return text;
   }
 
   Widget _buildTikTokIcon({
@@ -318,9 +336,17 @@ class _PostScreenState extends State<PostScreen> {
       onTap: onTap,
       child: Column(
         children: [
-          Icon(icon, color: color, size: 30), // Adjusted icon size
-          if (count != null)
-            const SizedBox(height: 4),
+          ColorFiltered(
+            colorFilter: ColorFilter.mode(
+              color,
+              BlendMode.srcIn,
+            ),
+            child: Icon(
+              icon,
+              size: 30,
+            ),
+          ),
+          if (count != null) const SizedBox(height: 4),
           if (count != null)
             Text(
               '$count',
