@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vendvibe/screens/post_screen.dart';
 import 'package:vendvibe/screens/profile.dart';
+import 'package:vendvibe/screens/search_screen.dart'; // Import the SearchScreen
 import 'package:vendvibe/services/user_service.dart';
 
 import 'login.dart';
@@ -82,6 +83,15 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.search, color: Colors.white), // Search icon
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SearchScreen()), // Navigate to SearchScreen
+            );
+          },
+        ),
         title: const Text(
           'VendVibe',
           style: TextStyle(
@@ -116,7 +126,7 @@ class _HomeState extends State<Home> {
       ),
       body: RefreshIndicator(
         onRefresh: _refreshPage,
-        child: _currentIndex == 0 ? const PostScreen() : Profile(),
+        child: _currentIndex == 0 ? const PostScreen(postId: 0) : Profile(),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

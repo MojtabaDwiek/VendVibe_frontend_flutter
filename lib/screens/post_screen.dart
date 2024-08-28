@@ -11,7 +11,7 @@ import 'post_form.dart';
 import 'package:flutter/services.dart';
 
 class PostScreen extends StatefulWidget {
-  const PostScreen({super.key});
+  const PostScreen({super.key, required postId});
 
   @override
   _PostScreenState createState() => _PostScreenState();
@@ -289,7 +289,7 @@ class _PostScreenState extends State<PostScreen> {
                               onTap: () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (context) => CommentScreen(postId: post.id ?? 0),
+                                    builder: (context) => CommentScreen(postId: post.id),
                                   ),
                                 );
                               },

@@ -1,0 +1,211 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:vendvibe/screens/post_screen.dart';
+
+class SearchScreen extends StatefulWidget {
+  @override
+  _SearchScreenState createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<SearchScreen> {
+  TextEditingController _searchController = TextEditingController();
+  List<dynamic> _searchResults = [];
+  bool _loading = false;
+
+  void _performSearch(String query) async {
+    setState(() {
+      _loading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://192.168.0.113:8000/api/search'),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: {'query': query},
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        try {
+          final data = json.decode(response.body);
+          print('Decoded data: $data');
+          setState(() {
+            _searchResults = data;
+            _loading = false;
+          });
+        } catch (e) {
+          print('Error decoding JSON: $e');
+          setState(() {
+            _searchResults = [];
+            _loading = false;
+          });
+        }
+      } else {
+        print('Error: ${response.reasonPhrase}');
+        setState(() {
+          _searchResults = [];
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      print('Error performing search: $e');
+      setState(() {
+        _searchResults = [];
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.amber[900],
+        title: TextField(
+          controller: _searchController,
+          decoration: InputDecoration(
+            hintText: 'Search...',
+            border: InputBorder.none,
+          ),
+          onChanged: (query) {
+            if (query.isNotEmpty) {
+              _performSearch(query);
+            } else {
+              setState(() {
+                _searchResults = [];
+              });
+            }
+          },
+        ),
+      ),
+      body: Container(
+        color: Colors.grey[700],
+        child: Column(
+          children: [
+            Expanded(
+              child: _loading
+                  ? Center(child: CircularProgressIndicator())
+                  : _searchResults.isEmpty
+                      ? Center(child: Text('No results found', style: TextStyle(color: Colors.white)))
+                      : GridView.builder(
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2, // Two items per row
+                            crossAxisSpacing: 8.0, // Spacing between columns
+                            mainAxisSpacing: 8.0, // Spacing between rows
+                            childAspectRatio: 0.75, // Aspect ratio for card size
+                          ),
+                          itemCount: _searchResults.length,
+                          itemBuilder: (context, index) {
+                            final post = _searchResults[index];
+                            final imageUrl = post['images'].isNotEmpty
+                                ? 'http://192.168.0.113:8000/storage/${post['images'][0]}'
+                                : 'http://192.168.0.113:8000/storage/default.jpg'; // Provide a default image URL
+
+                            print('Image URL: $imageUrl');
+
+                            // Convert price to double if it's a string
+                            final priceString = post['price']?.toString() ?? '0.0';
+                            final price = double.tryParse(priceString) ?? 0.0;
+
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PostScreen(postId: post['id']),
+                                  ),
+                                );
+                              },
+                              child: Card(
+                                elevation: 4.0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    // Background image
+                                    Positioned.fill(
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Image.network(
+                                          imageUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Center(child: Text('Image failed to load'));
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                    // Overlay with post details
+                                    Positioned(
+                                      bottom: 0,
+                                      left: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.black.withOpacity(0.7),
+                                              Colors.black.withOpacity(0.1),
+                                            ],
+                                            begin: Alignment.bottomCenter,
+                                            end: Alignment.topCenter,
+                                          ),
+                                          borderRadius: BorderRadius.only(
+                                            bottomLeft: Radius.circular(12),
+                                            bottomRight: Radius.circular(12),
+                                          ),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            if (price > 0) // Check if price is greater than 0
+                                              Padding(
+                                                padding: const EdgeInsets.only(bottom: 4.0),
+                                                child: Container(
+                                                  padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.amber[900]!,
+                                                    borderRadius: BorderRadius.circular(8),
+                                                  ),
+                                                  child: Text(
+                                                    '\$${price.toStringAsFixed(2)}',
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            Text(
+                                              post['body'] ?? 'No description',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 2, // Limit to two lines
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

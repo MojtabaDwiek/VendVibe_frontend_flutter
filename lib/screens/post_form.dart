@@ -129,119 +129,165 @@ class _PostFormState extends State<PostForm> {
   }
 
   void _editPost(int? postId) async {
-  if (postId == null) {
-    print("Post ID is null");
-    return;
-  }
+    if (postId == null) {
+      print("Post ID is null");
+      return;
+    }
 
-  if (!_formKey.currentState!.validate()) {
-    print("Form validation failed.");
-    return;
-  }
+    if (!_formKey.currentState!.validate()) {
+      print("Form validation failed.");
+      return;
+    }
 
-  setState(() {
-    _loading = true;
-  });
+    setState(() {
+      _loading = true;
+    });
 
-  ApiResponse response = await editPost(
-    postId,
-    _txtControllerBody.text,
-    _imageFiles.isNotEmpty ? _imageFiles : null,
-    _txtControllerPrice.text.isNotEmpty ? double.tryParse(_txtControllerPrice.text) : null,
-  );
-
-  setState(() {
-    _loading = false;
-  });
-
-  if (response.error == null) {
-    Navigator.of(context).pop();
-  } else if (response.error == unauthorized) {
-    await logout();
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => Login()),
-      (route) => false,
+    ApiResponse response = await editPost(
+      postId,
+      _txtControllerBody.text,
+      _imageFiles.isNotEmpty ? _imageFiles : null,
+      _txtControllerPrice.text.isNotEmpty ? double.tryParse(_txtControllerPrice.text) : null,
     );
-  } else {
-    print("API Response Error: ${response.error}");
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('${response.error}'),
-    ));
+
+    setState(() {
+      _loading = false;
+    });
+
+    if (response.error == null) {
+      Navigator.of(context).pop();
+    } else if (response.error == unauthorized) {
+      await logout();
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => Login()),
+        (route) => false,
+      );
+    } else {
+      print("API Response Error: ${response.error}");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('${response.error}'),
+      ));
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.title}'),
+        title: Text(
+          '${widget.title}',
+          style: TextStyle(color: Colors.amber[900]), // Set text color here
+        ),
+        backgroundColor: Colors.grey[900],
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.amber[900]), // Set icon color here
+        actions: [
+          if (_imageFiles.isEmpty)
+            IconButton(
+              icon: Icon(Icons.camera_alt, color: Colors.amber[900]),
+              onPressed: requestPermission,
+            ),
+        ],
       ),
+      backgroundColor: Colors.grey[900],
       body: _loading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(),
             )
-          : ListView(
+          : Stack(
               children: [
-                widget.post != null
-                    ? SizedBox()
-                    : Container(
-                        width: MediaQuery.of(context).size.width,
-                        height: 200,
-                        decoration: BoxDecoration(
-                            image: _imageFiles.isEmpty
-                                ? null
-                                : DecorationImage(
-                                    image: FileImage(_imageFiles.first),
-                                    fit: BoxFit.cover)),
-                        child: Center(
-                          child: IconButton(
-                            icon: Icon(Icons.image, size: 50, color: Colors.black38),
-                            onPressed: requestPermission,
-                          ),
+                _imageFiles.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Tap the camera icon to select images',
+                          style: TextStyle(color: Colors.white, fontSize: 18),
                         ),
+                      )
+                    : PageView.builder(
+                        itemCount: _imageFiles.length,
+                        itemBuilder: (context, index) {
+                          return Image.file(
+                            _imageFiles[index],
+                            fit: BoxFit.cover,
+                          );
+                        },
                       ),
-                Form(
-                  key: _formKey,
-                  child: Padding(
-                    padding: EdgeInsets.all(8),
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    color: Colors.grey[850],
+                    padding: EdgeInsets.all(16),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        TextFormField(
-                          controller: _txtControllerBody,
-                          keyboardType: TextInputType.multiline,
-                          maxLines: 9,
-                          validator: (val) {
-                            print('Validating body: $val'); // Debugging line
-                            if (val == null || val.isEmpty) {
-                              return 'Post body is required';
-                            }
-                            return null;
-                          },
-                          decoration: const InputDecoration(
-                              hintText: "Post body...",
-                              border: OutlineInputBorder(
-                                  borderSide: BorderSide(width: 1, color: Colors.black38))),
-                        ),
-                        SizedBox(height: 10),
-                        TextFormField(
-                          controller: _txtControllerPrice,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                              hintText: "Price (optional)",
-                              border: OutlineInputBorder(
-                                  borderSide: BorderSide(width: 1, color: Colors.black38))),
+                        Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              TextFormField(
+                                controller: _txtControllerBody,
+                                keyboardType: TextInputType.multiline,
+                                maxLines: 4,
+                                validator: (val) {
+                                  if (val == null || val.isEmpty) {
+                                    return 'Post body is required';
+                                  }
+                                  return null;
+                                },
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: Colors.grey[800],
+                                  hintText: "What's on your mind?",
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: EdgeInsets.all(16),
+                                ),
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              SizedBox(height: 10),
+                              TextFormField(
+                                controller: _txtControllerPrice,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: Colors.grey[800],
+                                  hintText: "Price (optional)",
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: EdgeInsets.all(16),
+                                ),
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              SizedBox(height: 20),
+                              ElevatedButton(
+                                onPressed: widget.post != null 
+                                    ? (widget.post!.id != null ? () => _editPost(widget.post!.id) : null) 
+                                    : _createPost,
+                                child: Text(widget.post != null ? 'Update Post' : 'Create Post'),
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.white, 
+                                  backgroundColor: Colors.amber[900]!,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  textStyle: TextStyle(fontSize: 16),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
-              ElevatedButton(
-  onPressed: widget.post != null 
-    ? (widget.post!.id != null ? () => _editPost(widget.post!.id) : null) 
-    : _createPost,
-  child: Text(widget.post != null ? 'Update Post' : 'Create Post'),
-),
               ],
             ),
     );
