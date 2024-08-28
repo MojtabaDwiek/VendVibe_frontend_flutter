@@ -1,9 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:vendvibe/models/api_response.dart';
 import 'package:vendvibe/models/post.dart';
 import 'package:vendvibe/services/user_service.dart';
-import 'package:http/http.dart' as http;
-
 import '../constant.dart';
 
 // Get all posts
@@ -24,7 +25,6 @@ Future<ApiResponse> getPosts() async {
         final data = jsonDecode(response.body);
         final List<dynamic> postsJson = data['posts'];
 
-        // Handle type conversion issues
         apiResponse.data = postsJson.map((p) {
           try {
             return Post.fromJson(p);
@@ -49,30 +49,40 @@ Future<ApiResponse> getPosts() async {
 }
 
 // Create post
-Future<ApiResponse> createPost(String body, List<String>? images, double? price) async {
+Future<ApiResponse> createPost(String body, List<File>? images, double? price) async {
   ApiResponse apiResponse = ApiResponse();
   try {
     String token = await getToken();
-    final response = await http.post(
-      Uri.parse(postsURL),
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json', // Make sure to specify the content type
-      },
-      body: jsonEncode({
-        'body': body,
-        'images': images ?? [], // Handle null by using empty list
-        'price': price ?? 0, // Handle null by using default value
-      }),
-    );
+    var request = http.MultipartRequest('POST', Uri.parse(postsURL));
+    request.headers['Accept'] = 'application/json';
+    request.headers['Authorization'] = 'Bearer $token';
+
+    // Add fields
+    request.fields['body'] = body;
+    request.fields['price'] = price?.toString() ?? '0';
+
+    // Add images
+    if (images != null && images.isNotEmpty) {
+      for (var image in images) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'images[]',
+            image.path,
+            contentType: MediaType('image', 'jpeg'), // Adjust content type if needed
+          ),
+        );
+      }
+    }
+
+    var response = await request.send();
+    final responseBody = await response.stream.bytesToString();
 
     switch (response.statusCode) {
       case 200:
-        apiResponse.data = jsonDecode(response.body);
+        apiResponse.data = jsonDecode(responseBody);
         break;
       case 422:
-        final errors = jsonDecode(response.body)['errors'];
+        final errors = jsonDecode(responseBody)['errors'];
         apiResponse.error = errors[errors.keys.elementAt(0)][0];
         break;
       case 401:
@@ -90,30 +100,40 @@ Future<ApiResponse> createPost(String body, List<String>? images, double? price)
 }
 
 // Edit post
-Future<ApiResponse> editPost(int postId, String body, List<String>? images, double? price) async {
+Future<ApiResponse> editPost(int postId, String body, List<File>? images, double? price) async {
   ApiResponse apiResponse = ApiResponse();
   try {
     String token = await getToken();
-    final response = await http.put(
-      Uri.parse('$postsURL/$postId'),
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json', // Make sure to specify the content type
-      },
-      body: jsonEncode({
-        'body': body,
-        'images': images ?? [], // Handle null by using empty list
-        'price': price ?? 0, // Handle null by using default value
-      }),
-    );
+    var request = http.MultipartRequest('PUT', Uri.parse('$postsURL/$postId'));
+    request.headers['Accept'] = 'application/json';
+    request.headers['Authorization'] = 'Bearer $token';
+
+    // Add fields
+    request.fields['body'] = body;
+    request.fields['price'] = price?.toString() ?? '0';
+
+    // Add images
+    if (images != null && images.isNotEmpty) {
+      for (var image in images) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'images[]',
+            image.path,
+            contentType: MediaType('image', 'jpeg'), // Adjust content type if needed
+          ),
+        );
+      }
+    }
+
+    var response = await request.send();
+    final responseBody = await response.stream.bytesToString();
 
     switch (response.statusCode) {
       case 200:
-        apiResponse.data = jsonDecode(response.body)['message'];
+        apiResponse.data = jsonDecode(responseBody)['message'];
         break;
       case 403:
-        apiResponse.error = jsonDecode(response.body)['message'];
+        apiResponse.error = jsonDecode(responseBody)['message'];
         break;
       case 401:
         apiResponse.error = unauthorized;

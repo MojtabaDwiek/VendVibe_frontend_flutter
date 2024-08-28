@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -94,15 +92,6 @@ class _PostFormState extends State<PostForm> {
     return resizedFile;
   }
 
-  Future<List<String>> getStringImages() async {
-    List<String> base64Images = [];
-    for (var imageFile in _imageFiles) {
-      Uint8List imageBytes = await imageFile.readAsBytes();
-      base64Images.add(base64Encode(imageBytes));
-    }
-    return base64Images;
-  }
-
   void _createPost() async {
     if (!_formKey.currentState!.validate()) {
       print("Form validation failed.");
@@ -113,11 +102,9 @@ class _PostFormState extends State<PostForm> {
       _loading = true;
     });
 
-    List<String> images = await getStringImages();
-    print("Creating post with body: ${_txtControllerBody.text}");
     ApiResponse response = await createPost(
       _txtControllerBody.text,
-      images.isNotEmpty ? images : null,
+      _imageFiles.isNotEmpty ? _imageFiles : null,
       _txtControllerPrice.text.isNotEmpty ? double.tryParse(_txtControllerPrice.text) : null,
     );
 
@@ -141,43 +128,47 @@ class _PostFormState extends State<PostForm> {
     }
   }
 
-  void _editPost(int postId) async {
-    if (!_formKey.currentState!.validate()) {
-      print("Form validation failed.");
-      return;
-    }
-
-    setState(() {
-      _loading = true;
-    });
-
-    List<String> images = await getStringImages();
-    ApiResponse response = await editPost(
-      postId,
-      _txtControllerBody.text,
-      images.isNotEmpty ? images : null,
-      _txtControllerPrice.text.isNotEmpty ? double.tryParse(_txtControllerPrice.text) : null,
-    );
-
-    setState(() {
-      _loading = false;
-    });
-
-    if (response.error == null) {
-      Navigator.of(context).pop();
-    } else if (response.error == unauthorized) {
-      await logout();
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => Login()),
-        (route) => false,
-      );
-    } else {
-      print("API Response Error: ${response.error}");
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('${response.error}'),
-      ));
-    }
+  void _editPost(int? postId) async {
+  if (postId == null) {
+    print("Post ID is null");
+    return;
   }
+
+  if (!_formKey.currentState!.validate()) {
+    print("Form validation failed.");
+    return;
+  }
+
+  setState(() {
+    _loading = true;
+  });
+
+  ApiResponse response = await editPost(
+    postId,
+    _txtControllerBody.text,
+    _imageFiles.isNotEmpty ? _imageFiles : null,
+    _txtControllerPrice.text.isNotEmpty ? double.tryParse(_txtControllerPrice.text) : null,
+  );
+
+  setState(() {
+    _loading = false;
+  });
+
+  if (response.error == null) {
+    Navigator.of(context).pop();
+  } else if (response.error == unauthorized) {
+    await logout();
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => Login()),
+      (route) => false,
+    );
+  } else {
+    print("API Response Error: ${response.error}");
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('${response.error}'),
+    ));
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -244,23 +235,13 @@ class _PostFormState extends State<PostForm> {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (widget.post == null) {
-                        _createPost();
-                      } else {
-                        _editPost(widget.post!.id ?? 0);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      backgroundColor: Colors.amber, // text color
-                    ),
-                    child: Text(widget.post == null ? 'Create Post' : 'Update Post'),
-                  ),
-                )
+                SizedBox(height: 20),
+              ElevatedButton(
+  onPressed: widget.post != null 
+    ? (widget.post!.id != null ? () => _editPost(widget.post!.id) : null) 
+    : _createPost,
+  child: Text(widget.post != null ? 'Update Post' : 'Create Post'),
+),
               ],
             ),
     );
