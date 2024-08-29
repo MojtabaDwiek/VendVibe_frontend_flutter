@@ -11,7 +11,9 @@ import 'post_form.dart';
 import 'package:flutter/services.dart';
 
 class PostScreen extends StatefulWidget {
-  const PostScreen({super.key, required postId});
+  const PostScreen({super.key, required this.postId});
+
+  final int postId;
 
   @override
   _PostScreenState createState() => _PostScreenState();
@@ -21,6 +23,7 @@ class _PostScreenState extends State<PostScreen> {
   List<dynamic> _postList = [];
   int userId = 0;
   bool _loading = true;
+  Set<int> _favorites = Set<int>(); // To keep track of favorite posts
 
   Future<void> retrievePosts() async {
     userId = await getUserId();
@@ -129,6 +132,46 @@ class _PostScreenState extends State<PostScreen> {
     }
   }
 
+  Future<void> _toggleFavorite(int postId) async {
+    // Check if the post is already in favorites
+    bool isFavorite = _favorites.contains(postId);
+
+    // Toggle the favorite status
+    ApiResponse response;
+    if (isFavorite) {
+      response = await removePostFromFavorites(postId);
+      if (response.error == null) {
+        setState(() {
+          _favorites.remove(postId);
+        });
+      }
+    } else {
+      response = await addPostToFavorites(postId);
+      if (response.error == null) {
+        setState(() {
+          _favorites.add(postId);
+        });
+      }
+    }
+
+    if (response.error != null) {
+      if (response.error == unauthorized) {
+        logout().then((_) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => Login()),
+            (route) => false,
+          );
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('${response.error}'),
+          ));
+        }
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -144,6 +187,8 @@ class _PostScreenState extends State<PostScreen> {
             itemCount: _postList.length,
             itemBuilder: (BuildContext context, int index) {
               Post post = _postList[index];
+              bool isFavorite = _favorites.contains(post.id);
+
               return LayoutBuilder(
                 builder: (context, constraints) {
                   return Stack(
@@ -303,6 +348,16 @@ class _PostScreenState extends State<PostScreen> {
                                if (post.user?.phoneNumber != null) {
     _launchWhatsApp(post.user?.phoneNumber ?? '');
                                 }
+                              },
+                            ),
+                            // Save to Favorites icon
+                            const SizedBox(height: 20),
+                            _buildTikTokIcon(
+                              icon: isFavorite ? Icons.bookmark : Icons.bookmark_outline,
+                              color: isFavorite ? Colors.amber : Colors.white,
+                              count: 0, // You can use this to display a specific count if needed
+                              onTap: () {
+                                _toggleFavorite(post.id ?? 0);
                               },
                             ),
                           ],

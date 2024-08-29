@@ -30,7 +30,7 @@ Future<ApiResponse> getPosts() async {
             return Post.fromJson(p);
           } catch (e) {
             print('Error parsing post: $e');
-            return null; // Handle or ignore errors as needed
+            return null;
           }
         }).where((post) => post != null).toList();
         break;
@@ -42,7 +42,7 @@ Future<ApiResponse> getPosts() async {
         break;
     }
   } catch (e) {
-    print('Error fetching posts: $e'); // Log error
+    print('Error fetching posts: $e');
     apiResponse.error = serverError;
   }
   return apiResponse;
@@ -57,18 +57,16 @@ Future<ApiResponse> createPost(String body, List<File>? images, double? price) a
     request.headers['Accept'] = 'application/json';
     request.headers['Authorization'] = 'Bearer $token';
 
-    // Add fields
     request.fields['body'] = body;
     request.fields['price'] = price?.toString() ?? '0';
 
-    // Add images
     if (images != null && images.isNotEmpty) {
       for (var image in images) {
         request.files.add(
           await http.MultipartFile.fromPath(
             'images[]',
             image.path,
-            contentType: MediaType('image', 'jpeg'), // Adjust content type if needed
+            contentType: MediaType('image', 'jpeg'),
           ),
         );
       }
@@ -88,12 +86,10 @@ Future<ApiResponse> createPost(String body, List<File>? images, double? price) a
       case 401:
         apiResponse.error = unauthorized;
         break;
-      default:
-        apiResponse.error = somethingWentWrong;
-        break;
+      
     }
   } catch (e) {
-    print('Error creating post: $e'); // Log error
+    print('Error creating post: $e');
     apiResponse.error = serverError;
   }
   return apiResponse;
@@ -108,18 +104,16 @@ Future<ApiResponse> editPost(int postId, String body, List<File>? images, double
     request.headers['Accept'] = 'application/json';
     request.headers['Authorization'] = 'Bearer $token';
 
-    // Add fields
     request.fields['body'] = body;
     request.fields['price'] = price?.toString() ?? '0';
 
-    // Add images
     if (images != null && images.isNotEmpty) {
       for (var image in images) {
         request.files.add(
           await http.MultipartFile.fromPath(
             'images[]',
             image.path,
-            contentType: MediaType('image', 'jpeg'), // Adjust content type if needed
+            contentType: MediaType('image', 'jpeg'),
           ),
         );
       }
@@ -143,7 +137,7 @@ Future<ApiResponse> editPost(int postId, String body, List<File>? images, double
         break;
     }
   } catch (e) {
-    print('Error editing post: $e'); // Log error
+    print('Error editing post: $e');
     apiResponse.error = serverError;
   }
   return apiResponse;
@@ -177,7 +171,7 @@ Future<ApiResponse> deletePost(int postId) async {
         break;
     }
   } catch (e) {
-    print('Error deleting post: $e'); // Log error
+    print('Error deleting post: $e');
     apiResponse.error = serverError;
   }
   return apiResponse;
@@ -208,7 +202,69 @@ Future<ApiResponse> likeUnlikePost(int postId) async {
         break;
     }
   } catch (e) {
-    print('Error liking/unliking post: $e'); // Log error
+    print('Error liking/unliking post: $e');
+    apiResponse.error = serverError;
+  }
+  return apiResponse;
+}
+
+// Add post to favorites
+Future<ApiResponse> addPostToFavorites(int postId) async {
+  ApiResponse apiResponse = ApiResponse();
+  try {
+    String token = await getToken();
+    final response = await http.post(
+      Uri.parse('http://192.168.0.113:8000/api/posts/$postId/favorites'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    switch (response.statusCode) {
+      case 200:
+        apiResponse.data = jsonDecode(response.body)['message'];
+        break;
+      case 401:
+        apiResponse.error = unauthorized;
+        break;
+      default:
+        apiResponse.error = somethingWentWrong;
+        break;
+    }
+  } catch (e) {
+    print('Error adding post to favorites: $e');
+    apiResponse.error = serverError;
+  }
+  return apiResponse;
+}
+
+// Remove post from favorites
+Future<ApiResponse> removePostFromFavorites(int postId) async {
+  ApiResponse apiResponse = ApiResponse();
+  try {
+    String token = await getToken();
+    final response = await http.delete(
+      Uri.parse('http://192.168.0.113:8000/api/posts/$postId/favorites'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    switch (response.statusCode) {
+      case 200:
+        apiResponse.data = jsonDecode(response.body)['message'];
+        break;
+      case 401:
+        apiResponse.error = unauthorized;
+        break;
+      default:
+        apiResponse.error = somethingWentWrong;
+        break;
+    }
+  } catch (e) {
+    print('Error removing post from favorites: $e');
     apiResponse.error = serverError;
   }
   return apiResponse;
