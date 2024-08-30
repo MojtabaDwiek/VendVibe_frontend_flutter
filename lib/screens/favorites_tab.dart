@@ -24,7 +24,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
     return prefs.getString('token');
   }
 
-  void _fetchFavorites() async {
+  Future<void> _fetchFavorites() async {
     setState(() {
       _loading = true;
     });
@@ -43,7 +43,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
-          _favorites = data;
+          _favorites = data.map((item) => item['post']).toList(); // Extract 'post' data
           _loading = false;
         });
       } else {

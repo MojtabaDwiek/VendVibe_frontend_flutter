@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:vendvibe/models/api_response.dart';
@@ -8,8 +7,8 @@ import 'package:vendvibe/services/user_service.dart';
 
 import '../constant.dart';
 import 'login.dart';
-import 'favorites_tab.dart'; // Import the FavoritesTab widget
-import 'my_items_tab.dart';   // Import the MyItemsTab widget
+import 'favorites_tab.dart';
+import 'my_items_tab.dart';
 
 class Profile extends StatefulWidget {
   @override
@@ -94,85 +93,94 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return loading ? const Center(child: CircularProgressIndicator()) :
-    Scaffold(
-      appBar: AppBar(
-        title: Text('Profile'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: 'Profile'),
-            Tab(text: 'Favorites'),
-            Tab(text: 'My Items'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Profile Page Content
-          Padding(
-            padding: EdgeInsets.only(top: 40, left: 40, right: 40),
-            child: ListView(
+    return loading
+        ? const Center(child: CircularProgressIndicator())
+        : Scaffold(
+            appBar: AppBar(
+              title: Text('Profile', style: TextStyle(color: Colors.amber[900])),
+              backgroundColor: Colors.grey[700],
+              bottom: TabBar(
+                controller: _tabController,
+                tabs: [
+                  Tab(text: 'Profile', icon: Icon(Icons.person, color: Colors.amber[900])),
+                  Tab(text: 'Favorites', icon: Icon(Icons.favorite, color: Colors.amber[900])),
+                  Tab(text: 'My Items', icon: Icon(Icons.list, color: Colors.amber[900])),
+                ],
+              ),
+            ),
+            body: TabBarView(
+              controller: _tabController,
               children: [
-                Center(
-                  child: GestureDetector(
-                    child: Container(
-                      width: 110,
-                      height: 110,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(60),
-                        image: _imageFile == null
-                            ? user!.image != null
-                              ? DecorationImage(
-                                  image: NetworkImage('${user!.image}'),
-                                  fit: BoxFit.cover,
-                                )
-                              : null
-                            : DecorationImage(
-                                image: FileImage(_imageFile!),
-                                fit: BoxFit.cover,
-                              ),
-                        color: Colors.amber,
+                Padding(
+                  padding: EdgeInsets.all(20),
+                  child: ListView(
+                    children: [
+                      Center(
+                        child: GestureDetector(
+                          onTap: getImage,
+                          child: CircleAvatar(
+                            radius: 60,
+                            backgroundColor: Colors.amber[900],
+                            backgroundImage: _imageFile != null
+                                ? FileImage(_imageFile!)
+                                : user?.image != null
+                                    ? NetworkImage('${user!.image}')
+                                    : null,
+                            child: _imageFile == null && user?.image == null
+                                ? Icon(Icons.camera_alt, color: Colors.white, size: 30)
+                                : null,
+                          ),
+                        ),
                       ),
-                    ),
-                    onTap: () {
-                      getImage();
-                    },
+                      SizedBox(height: 20),
+                      Form(
+                        key: formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Name',
+                              style: TextStyle(color: Colors.amber[900], fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 8),
+                            TextFormField(
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.grey[800],
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              ),
+                              controller: txtNameController,
+                              validator: (val) => val!.isEmpty ? 'Invalid Name' : null,
+                            ),
+                            SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: () {
+                                if (formKey.currentState!.validate()) {
+                                  setState(() {
+                                    loading = true;
+                                  });
+                                  updateProfile();
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: Colors.white, backgroundColor: Colors.amber[900],
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              child: Text('Update'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 20),
-                Form(
-                  key: formKey,
-                  child: TextFormField(
-                    decoration: kInputDecoration('Name'),
-                    controller: txtNameController,
-                    validator: (val) => val!.isEmpty ? 'Invalid Name' : null,
-                  ),
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    if (formKey.currentState!.validate()) {
-                      setState(() {
-                        loading = true;
-                      });
-                      updateProfile();
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.amber, // text color
-                  ),
-                  child: Text('Update'),
-                ),
+                FavoritesTab(),
+                MyItemsTab(),
               ],
             ),
-          ),
-          FavoritesTab(), // Display the FavoritesTab widget
-          MyItemsTab(),   // Display the MyItemsTab widget
-        ],
-      ),
-    );
+            backgroundColor: Colors.grey[700],
+          );
   }
 }

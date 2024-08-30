@@ -208,29 +208,40 @@ Future<ApiResponse> likeUnlikePost(int postId) async {
   return apiResponse;
 }
 
+
 // Add post to favorites
 Future<ApiResponse> addPostToFavorites(int postId) async {
   ApiResponse apiResponse = ApiResponse();
   try {
     String token = await getToken();
     final response = await http.post(
-      Uri.parse('http://192.168.0.113:8000/api/posts/$postId/favorites'),
+      Uri.parse('$postsURL/favorites'),
       headers: {
         'Accept': 'application/json',
         'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json', // Add content type header
       },
+      body: jsonEncode({'post_id': postId}), // Send post_id in the body
     );
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
 
     switch (response.statusCode) {
       case 200:
-        apiResponse.data = jsonDecode(response.body)['message'];
+        final responseData = jsonDecode(response.body);
+        print('Response message: ${responseData['message']}');
+        print('Favorite data: ${responseData['favorite']}');
+        apiResponse.data = responseData['message'];
         break;
       case 401:
         apiResponse.error = unauthorized;
         break;
-      default:
-        apiResponse.error = somethingWentWrong;
+      case 422:
+        final errors = jsonDecode(response.body)['errors'];
+        apiResponse.error = errors[errors.keys.elementAt(0)][0];
         break;
+     
     }
   } catch (e) {
     print('Error adding post to favorites: $e');
@@ -239,13 +250,15 @@ Future<ApiResponse> addPostToFavorites(int postId) async {
   return apiResponse;
 }
 
+
+
 // Remove post from favorites
 Future<ApiResponse> removePostFromFavorites(int postId) async {
   ApiResponse apiResponse = ApiResponse();
   try {
     String token = await getToken();
     final response = await http.delete(
-      Uri.parse('http://192.168.0.113:8000/api/posts/$postId/favorites'),
+      Uri.parse('$postsURL/$postId/favorites'), // Use postsURL here
       headers: {
         'Accept': 'application/json',
         'Authorization': 'Bearer $token',
@@ -269,3 +282,4 @@ Future<ApiResponse> removePostFromFavorites(int postId) async {
   }
   return apiResponse;
 }
+
