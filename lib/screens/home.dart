@@ -72,6 +72,33 @@ class _HomeState extends State<Home> {
     });
   }
 
+  Future<bool> _onWillPop() async {
+    // Show a confirmation dialog when the user tries to close the app
+    return (await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Exit App'),
+          content: const Text('Are you sure you want to exit the app?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // Do not exit the app
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); // Exit the app
+              },
+              child: const Text('Exit'),
+            ),
+          ],
+        );
+      },
+    )) ?? false; // Default to false if dialog is dismissed
+  }
+
   @override
   void initState() {
     super.initState();
@@ -81,95 +108,98 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.search, color: Colors.white), // Search icon
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => SearchScreen()), // Navigate to SearchScreen
-            );
-          },
-        ),
-        title: const Text(
-          'VendVibe',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.amber[700]!, Colors.amber[900]!],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        elevation: 5,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.power_settings_new, color: Colors.white),
-            onPressed: () async {
-              await logout();
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => Login()),
-                (route) => false,
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.search, color: Colors.white), // Search icon
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SearchScreen()), // Navigate to SearchScreen
               );
             },
           ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _refreshPage,
-        child: _currentIndex == 0 ? const PostScreen(postId: 0) : Profile(),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => PostForm(
-                title: 'Add new post',
+          title: const Text(
+            'VendVibe',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: true,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.amber[700]!, Colors.amber[900]!],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
             ),
-          );
-          showSnackBar('Navigating to Post Form');
-        },
-        child: Icon(Icons.add, color: Colors.amber[900]!),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15), // Rounded rectangle shape
+          ),
+          elevation: 5,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.power_settings_new, color: Colors.white),
+              onPressed: () async {
+                await logout();
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => Login()),
+                  (route) => false,
+                );
+              },
+            ),
+          ],
         ),
-        backgroundColor: Colors.white,
-      ),
-      floatingActionButtonLocation: CustomFloatingActionButtonLocation(),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          showSnackBar(index == 0 ? 'Home selected' : 'Profile selected');
-        },
-        items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+        body: RefreshIndicator(
+          onRefresh: _refreshPage,
+          child: _currentIndex == 0 ? const PostScreen(postId: 0) : Profile(),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => PostForm(
+                  title: 'Add new post',
+                ),
+              ),
+            );
+            showSnackBar('Navigating to Post Form');
+          },
+          child: Icon(Icons.add, color: Colors.amber[900]!),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15), // Rounded rectangle shape
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.amber[900]!, // Background color to match app bar
-        selectedItemColor: Colors.black, // Selected item color
-        unselectedItemColor: Colors.white70, // Unselected item color
-        selectedLabelStyle: const TextStyle(color: Colors.white), // Color of selected label
-        unselectedLabelStyle: const TextStyle(color: Colors.white), // Color of unselected label
+          backgroundColor: Colors.white,
+        ),
+        floatingActionButtonLocation: CustomFloatingActionButtonLocation(),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+            showSnackBar(index == 0 ? 'Home selected' : 'Profile selected');
+          },
+          items: [
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.amber[900]!, // Background color to match app bar
+          selectedItemColor: Colors.black, // Selected item color
+          unselectedItemColor: Colors.white70, // Unselected item color
+          selectedLabelStyle: const TextStyle(color: Colors.white), // Color of selected label
+          unselectedLabelStyle: const TextStyle(color: Colors.white), // Color of unselected label
+        ),
       ),
     );
   }
