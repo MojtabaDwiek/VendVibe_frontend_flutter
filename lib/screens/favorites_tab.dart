@@ -1,8 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vendvibe/constant.dart';
+import 'package:vendvibe/models/api_response.dart';
+import 'package:vendvibe/services/user_service.dart';
 
 class FavoritesTab extends StatefulWidget {
   @override
@@ -49,7 +53,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
           'Authorization': 'Bearer $token',
         },
       );
-
+      print('API Response: ${response.body}');
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -72,6 +76,37 @@ class _FavoritesTabState extends State<FavoritesTab> {
     }
   }
 
+ Future<ApiResponse> removePostFromFavorites(int postId) async {
+  ApiResponse apiResponse = ApiResponse();
+  try {
+    String token = await getToken();
+    final response = await http.delete(
+      Uri.parse('$postsURL/$postId/favorites'), // Use postsURL here
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    switch (response.statusCode) {
+      case 200:
+        apiResponse.data = jsonDecode(response.body)['message'];
+        await _fetchFavorites();
+        break;
+      case 401:
+        apiResponse.error = unauthorized;
+        break;
+      default:
+        apiResponse.error = somethingWentWrong;
+        break;
+    }
+  } catch (e) {
+    print('Error removing post from favorites: $e');
+    apiResponse.error = serverError;
+  }
+  return apiResponse;
+}
+
   void _showPageView(int index) {
     setState(() {
       _isGridView = false;
@@ -88,11 +123,42 @@ class _FavoritesTabState extends State<FavoritesTab> {
   }
 
   Future<void> _launchWhatsApp(String phoneNumber) async {
+    print('Original phone number: $phoneNumber');
+
+    if (phoneNumber.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Phone number is not available')),
+        );
+      }
+      return;
+    }
+
+    if (!phoneNumber.startsWith('+961')) {
+      phoneNumber = '+961$phoneNumber';
+    }
+
     final url = 'https://wa.me/$phoneNumber';
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      throw 'Could not launch $url';
+    print('WhatsApp URL: $url');
+
+    try {
+      final result = await canLaunch(url);
+      if (result) {
+        await launch(url);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not launch WhatsApp')),
+          );
+        }
+      }
+    } on PlatformException catch (e) {
+      print('Error launching WhatsApp: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch WhatsApp')),
+        );
+      }
     }
   }
 
@@ -121,6 +187,9 @@ class _FavoritesTabState extends State<FavoritesTab> {
                           itemCount: _favorites.length,
                           itemBuilder: (context, index) {
                             final favorite = _favorites[index];
+                            print('User details: ${favorite['user']}');
+                            print('Phone number: ${favorite['user']?['phone_number']}');
+
                             final images = favorite['images'] as List<dynamic>? ?? [];
                             final imageUrl = images.isNotEmpty
                                 ? 'http://192.168.0.113:8000/storage/${images[0]}'
@@ -186,7 +255,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                                         child: IconButton(
                                           icon: Icon(Icons.phone, color: Colors.amber[900]),
                                           onPressed: () {
-                                            final phoneNumber = favorite['user']?['phone'] ?? '';
+                                            final phoneNumber = favorite['user']?['phone_number'] ?? '';
                                             if (phoneNumber.isNotEmpty) {
                                               _launchWhatsApp(phoneNumber);
                                             } else {
@@ -194,6 +263,17 @@ class _FavoritesTabState extends State<FavoritesTab> {
                                             }
                                           },
                                         ),
+                                      ),
+                                    ),
+                                    // Remove from favorites button at the top right
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: IconButton(
+                                        icon: Icon(Icons.favorite, color: Colors.red),
+                                        onPressed: () {
+                                          removePostFromFavorites(favorite['id']);
+                                        },
                                       ),
                                     ),
                                   ],
@@ -212,10 +292,13 @@ class _FavoritesTabState extends State<FavoritesTab> {
               physics: NeverScrollableScrollPhysics(), // Disable scrolling
               itemBuilder: (context, index) {
                 final favorite = _favorites[index];
+                print('User details: ${favorite['user']}');
+                print('Phone number: ${favorite['user']?['phone_number']}');
+
                 final images = favorite['images'] as List<dynamic>? ?? [];
                 final priceString = favorite['price']?.toString() ?? '0.0';
                 final price = double.tryParse(priceString) ?? 0.0;
-                final phoneNumber = favorite['user']?['phone'] ?? '';
+                final phoneNumber = favorite['user']?['phone_number'] ?? '';
 
                 return GestureDetector(
                   onTap: () {
@@ -297,7 +380,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 8),
-                              // Action buttons (WhatsApp, Call)
+                              // Action buttons (WhatsApp, Call, Remove)
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
@@ -311,6 +394,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                                       }
                                     },
                                   ),
+                                  
                                 ],
                               ),
                             ],

@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vendvibe/constant.dart';
+import 'package:vendvibe/models/api_response.dart';
+import 'package:vendvibe/screens/login.dart';
+import 'package:vendvibe/services/post_service.dart';
+import 'package:vendvibe/services/user_service.dart';
 
 class MyItemsTab extends StatefulWidget {
   @override
@@ -96,6 +101,26 @@ class _MyItemsTabState extends State<MyItemsTab> {
     }
   }
 
+  void _handleDeletePost(int postId) async {
+    ApiResponse response = await deletePost(postId);
+    if (response.error == null) {
+      _fetchMyItems();
+    } else if (response.error == unauthorized) {
+      logout().then((_) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => Login()),
+          (route) => false,
+        );
+      });
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('${response.error}'),
+        ));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -129,69 +154,72 @@ class _MyItemsTabState extends State<MyItemsTab> {
                               onTap: () {
                                 _showPageView(index);
                               },
-                              child: Card(
-                                elevation: 4.0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Stack(
-                                  children: [
-                                    Positioned.fill(
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Image.network(
-                                          imageUrl,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return Center(child: Text('Image failed to load'));
-                                          },
-                                        ),
+                              child: Stack(
+                                children: [
+                                  Positioned.fill(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Image.network(
+                                        imageUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Center(child: Text('Image failed to load'));
+                                        },
                                       ),
                                     ),
-                                    // Price at top center with amber background
-                                    Positioned(
-                                      top: 10,
-                                      left: 0,
-                                      right: 0,
-                                      child: Center(
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-                                          decoration: BoxDecoration(
-                                            color: Colors.amber[900],
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          child: Text(
-                                            '\$${price.toStringAsFixed(2)}',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                  ),
+                                  Positioned(
+                                    top: 10,
+                                    left: 0,
+                                    right: 0,
+                                    child: Center(
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber[900],
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          '\$${price.toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                       ),
                                     ),
-                                    // Phone icon at the bottom center
-                                    Positioned(
-                                      bottom: 10,
-                                      left: 0,
-                                      right: 0,
-                                      child: Center(
-                                        child: IconButton(
-                                          icon: Icon(Icons.phone, color: Colors.amber[900]),
-                                          onPressed: () {
-                                            final phoneNumber = item['user']?['phone'] ?? '';
-                                            if (phoneNumber.isNotEmpty) {
-                                              _launchWhatsApp(phoneNumber);
-                                            } else {
-                                              print('No phone number available');
-                                            }
-                                          },
-                                        ),
+                                  ),
+                                  Positioned(
+                                    bottom: 10,
+                                    left: 0,
+                                    right: 0,
+                                    child: Center(
+                                      child: IconButton(
+                                        icon: Icon(Icons.phone, color: Colors.amber[900]),
+                                        onPressed: () {
+                                          final phoneNumber = item['user']?['phone'] ?? '';
+                                          if (phoneNumber.isNotEmpty) {
+                                            _launchWhatsApp(phoneNumber);
+                                          } else {
+                                            print('No phone number available');
+                                          }
+                                        },
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  // Delete button
+                                  Positioned(
+                                    top: 0,
+                                    left: 0,
+                                    child: IconButton(
+                                      icon: Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () {
+                                        _handleDeletePost(item['id']);
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
                             );
                           },
@@ -214,7 +242,6 @@ class _MyItemsTabState extends State<MyItemsTab> {
                   },
                   child: Stack(
                     children: [
-                      // PageView for images
                       PageView.builder(
                         itemCount: images.length,
                         itemBuilder: (context, imageIndex) {
@@ -231,7 +258,6 @@ class _MyItemsTabState extends State<MyItemsTab> {
                           );
                         },
                       ),
-                      // Price at top center with amber background
                       Positioned(
                         top: 10,
                         left: 0,
@@ -254,7 +280,6 @@ class _MyItemsTabState extends State<MyItemsTab> {
                           ),
                         ),
                       ),
-                      // Gradient overlay at the bottom for product details
                       Positioned(
                         bottom: 0,
                         left: 0,
@@ -274,7 +299,6 @@ class _MyItemsTabState extends State<MyItemsTab> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Product description
                               Text(
                                 item['body'] ?? 'No description',
                                 style: const TextStyle(
@@ -286,7 +310,6 @@ class _MyItemsTabState extends State<MyItemsTab> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 8),
-                              // Action buttons (WhatsApp, Call)
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
@@ -310,7 +333,6 @@ class _MyItemsTabState extends State<MyItemsTab> {
                   ),
                 );
               },
-              physics: NeverScrollableScrollPhysics(), // Disable scrolling
             ),
     );
   }
