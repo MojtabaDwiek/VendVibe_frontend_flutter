@@ -54,6 +54,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
       );
     }
   }
+  
 
   void updateProfile() async {
     ApiResponse response = await updateUser(txtNameController.text, getStringImage(_imageFile));
@@ -96,88 +97,96 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
     return loading
         ? const Center(child: CircularProgressIndicator())
         : Scaffold(
-            appBar: AppBar(
-              title: Text('Profile', style: TextStyle(color: Colors.amber[900])),
-              backgroundColor: Colors.grey[700],
-              bottom: TabBar(
-                controller: _tabController,
-                tabs: [
-                  Tab(text: 'Profile', icon: Icon(Icons.person, color: Colors.amber[900])),
-                  Tab(text: 'Favorites', icon: Icon(Icons.favorite, color: Colors.amber[900])),
-                  Tab(text: 'My Items', icon: Icon(Icons.list, color: Colors.amber[900])),
-                ],
-              ),
-            ),
-            body: TabBarView(
-              controller: _tabController,
+            body: Column(
               children: [
-                Padding(
-                  padding: EdgeInsets.all(20),
-                  child: ListView(
+                Container(
+                  color: Colors.grey[700],
+                  child: TabBar(
+                    controller: _tabController,
+                    labelColor: Colors.amber[900],
+                    indicatorColor: Colors.amber[900],
+                    unselectedLabelColor: Colors.white,
+                    tabs: [
+                      Tab(text: 'Profile', icon: Icon(Icons.person)),
+                      Tab(text: 'Favorites', icon: Icon(Icons.favorite)),
+                      Tab(text: 'My Items', icon: Icon(Icons.list)),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
                     children: [
-                      Center(
-                        child: GestureDetector(
-                          onTap: getImage,
-                          child: CircleAvatar(
-                            radius: 60,
-                            backgroundColor: Colors.amber[900],
-                            backgroundImage: _imageFile != null
-                                ? FileImage(_imageFile!)
-                                : user?.image != null
-                                    ? NetworkImage('${user!.image}')
-                                    : null,
-                            child: _imageFile == null && user?.image == null
-                                ? Icon(Icons.camera_alt, color: Colors.white, size: 30)
-                                : null,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      Form(
-                        key: formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      Padding(
+                        padding: EdgeInsets.all(20),
+                        child: ListView(
                           children: [
-                            Text(
-                              'Name',
-                              style: TextStyle(color: Colors.amber[900], fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            SizedBox(height: 8),
-                            TextFormField(
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: Colors.grey[800],
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            Center(
+                              child: GestureDetector(
+                                onTap: getImage,
+                                child: CircleAvatar(
+                                  radius: 60,
+                                  backgroundColor: Colors.amber[900],
+                                  backgroundImage: _imageFile != null
+                                      ? FileImage(_imageFile!)
+                                      : user?.image != null
+                                          ? NetworkImage('${user!.image}')
+                                          : null,
+                                  child: _imageFile == null && user?.image == null
+                                      ? Icon(Icons.camera_alt, color: Colors.white, size: 30)
+                                      : null,
+                                ),
                               ),
-                              controller: txtNameController,
-                              validator: (val) => val!.isEmpty ? 'Invalid Name' : null,
                             ),
                             SizedBox(height: 20),
-                            ElevatedButton(
-                              onPressed: () {
-                                if (formKey.currentState!.validate()) {
-                                  setState(() {
-                                    loading = true;
-                                  });
-                                  updateProfile();
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: Colors.white, backgroundColor: Colors.amber[900],
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            Form(
+                              key: formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Name',
+                                    style: TextStyle(color: Colors.amber[900], fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(height: 8),
+                                  TextFormField(
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.grey[800],
+                                      border: OutlineInputBorder(),
+                                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    ),
+                                    controller: txtNameController,
+                                    validator: (val) => val!.isEmpty ? 'Invalid Name' : null,
+                                  ),
+                                  SizedBox(height: 20),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      if (formKey.currentState!.validate()) {
+                                        setState(() {
+                                          loading = true;
+                                        });
+                                        updateProfile();
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      foregroundColor: Colors.white, backgroundColor: Colors.amber[900],
+                                      padding: EdgeInsets.symmetric(vertical: 14),
+                                      textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    ),
+                                    child: Text('Update'),
+                                  ),
+                                ],
                               ),
-                              child: Text('Update'),
                             ),
                           ],
                         ),
                       ),
+                      FavoritesTab(),
+                      MyItemsTab(),
                     ],
                   ),
                 ),
-                FavoritesTab(),
-                MyItemsTab(),
               ],
             ),
             backgroundColor: Colors.grey[700],

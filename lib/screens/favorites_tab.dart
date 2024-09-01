@@ -76,7 +76,6 @@ class _FavoritesTabState extends State<FavoritesTab> {
     setState(() {
       _isGridView = false;
     });
-    // Ensure PageController is attached before calling jumpToPage
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _pageController.jumpToPage(index);
     });
@@ -107,9 +106,13 @@ class _FavoritesTabState extends State<FavoritesTab> {
               child: _loading
                   ? Center(child: CircularProgressIndicator())
                   : _favorites.isEmpty
-                      ? Center(child: Text('No favorites found', style: TextStyle(color: Colors.white)))
+                      ? Center(
+                          child: Text('No favorites found',
+                              style: TextStyle(color: Colors.white)),
+                        )
                       : GridView.builder(
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             crossAxisSpacing: 8.0,
                             mainAxisSpacing: 8.0,
@@ -144,74 +147,53 @@ class _FavoritesTabState extends State<FavoritesTab> {
                                           imageUrl,
                                           fit: BoxFit.cover,
                                           errorBuilder: (context, error, stackTrace) {
-                                            return Center(child: Text('Image failed to load'));
+                                            return Center(
+                                                child: Text('Image failed to load'));
                                           },
                                         ),
                                       ),
                                     ),
+                                    // Price at top center with amber background
                                     Positioned(
-                                      bottom: 0,
+                                      top: 10,
                                       left: 0,
                                       right: 0,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Colors.black.withOpacity(0.7),
-                                              Colors.black.withOpacity(0.1),
-                                            ],
-                                            begin: Alignment.bottomCenter,
-                                            end: Alignment.topCenter,
+                                      child: Center(
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: 4, horizontal: 12),
+                                          decoration: BoxDecoration(
+                                            color: Colors.amber[900],
+                                            borderRadius: BorderRadius.circular(12),
                                           ),
-                                          borderRadius: BorderRadius.only(
-                                            bottomLeft: Radius.circular(12),
-                                            bottomRight: Radius.circular(12),
-                                          ),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                favorite['body'] ?? 'No description',
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                                maxLines: 2,
-                                              ),
+                                          child: Text(
+                                            '\$${price.toStringAsFixed(2)}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
                                             ),
-                                            if (price > 0)
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                                child: Text(
-                                                  '\$${price.toStringAsFixed(2)}',
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                          ],
+                                          ),
                                         ),
                                       ),
                                     ),
+                                    // Phone icon at the bottom center
                                     Positioned(
+                                      bottom: 10,
+                                      left: 0,
                                       right: 0,
-                                      bottom: 0,
-                                      child: IconButton(
-                                        icon: Icon(Icons.phone, color: Colors.white),
-                                        onPressed: () {
-                                          final phoneNumber = favorite['user']?['phone'] ?? '';
-                                          if (phoneNumber.isNotEmpty) {
-                                            _launchWhatsApp(phoneNumber);
-                                          } else {
-                                            print('No phone number available');
-                                          }
-                                        },
+                                      child: Center(
+                                        child: IconButton(
+                                          icon: Icon(Icons.phone, color: Colors.amber[900]),
+                                          onPressed: () {
+                                            final phoneNumber = favorite['user']?['phone'] ?? '';
+                                            if (phoneNumber.isNotEmpty) {
+                                              _launchWhatsApp(phoneNumber);
+                                            } else {
+                                              print('No phone number available');
+                                            }
+                                          },
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -224,96 +206,120 @@ class _FavoritesTabState extends State<FavoritesTab> {
           : PageView.builder(
               controller: _pageController,
               itemCount: _favorites.length,
+              onPageChanged: (index) {
+                setState(() {});
+              },
+              physics: NeverScrollableScrollPhysics(), // Disable scrolling
               itemBuilder: (context, index) {
                 final favorite = _favorites[index];
                 final images = favorite['images'] as List<dynamic>? ?? [];
                 final priceString = favorite['price']?.toString() ?? '0.0';
                 final price = double.tryParse(priceString) ?? 0.0;
-
                 final phoneNumber = favorite['user']?['phone'] ?? '';
 
                 return GestureDetector(
                   onTap: () {
                     _showGridView();
                   },
-                  child: Container(
-                    color: Colors.grey[700],
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: PageView.builder(
-                            itemCount: images.length,
-                            itemBuilder: (context, imageIndex) {
-                              final imageUrl = images.isNotEmpty
-                                  ? 'http://192.168.0.113:8000/storage/${images[imageIndex]}'
-                                  : 'http://192.168.0.113:8000/storage/default.jpg';
+                  child: Stack(
+                    children: [
+                      // PageView for images
+                      PageView.builder(
+                        itemCount: images.length,
+                        itemBuilder: (context, imageIndex) {
+                          final imageUrl = images.isNotEmpty
+                              ? 'http://192.168.0.113:8000/storage/${images[imageIndex]}'
+                              : 'http://192.168.0.113:8000/storage/default.jpg';
 
-                              return Image.network(
-                                imageUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Center(child: Text('Image failed to load'));
-                                },
-                              );
+                          return Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Center(
+                                  child: Text('Image failed to load'));
                             },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  favorite['body'] ?? 'No description',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.left,
-                                ),
+                          );
+                        },
+                      ),
+                      // Price at top center with amber background
+                      Positioned(
+                        top: 10,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                                vertical: 4, horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.amber[900],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '\$${price.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
-                              if (price > 0)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                  child: Text(
-                                    '\$${price.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Align(
-                            alignment: Alignment.bottomRight,
-                            child: IconButton(
-                              icon: Icon(Icons.phone, color: Colors.white),
-                              onPressed: () {
-                                if (phoneNumber.isNotEmpty) {
-                                  _launchWhatsApp(phoneNumber);
-                                } else {
-                                  print('No phone number available');
-                                }
-                              },
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      // Gradient overlay at the bottom for product details
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.black.withOpacity(0.7),
+                                Colors.transparent,
+                              ],
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Product description
+                              Text(
+                                favorite['body'] ?? 'No description',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 8),
+                              // Action buttons (WhatsApp, Call)
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.phone, color: Colors.amber[900]),
+                                    onPressed: () {
+                                      if (phoneNumber.isNotEmpty) {
+                                        _launchWhatsApp(phoneNumber);
+                                      } else {
+                                        print('No phone number available');
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 );
-              },
-              onPageChanged: (index) {
-                setState(() {
-                });
               },
             ),
     );

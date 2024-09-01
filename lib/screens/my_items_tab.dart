@@ -76,7 +76,6 @@ class _MyItemsTabState extends State<MyItemsTab> {
     setState(() {
       _isGridView = false;
     });
-    // Ensure PageController is attached before calling jumpToPage
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _pageController.jumpToPage(index);
     });
@@ -149,69 +148,46 @@ class _MyItemsTabState extends State<MyItemsTab> {
                                         ),
                                       ),
                                     ),
+                                    // Price at top center with amber background
                                     Positioned(
-                                      bottom: 0,
+                                      top: 10,
                                       left: 0,
                                       right: 0,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Colors.black.withOpacity(0.7),
-                                              Colors.black.withOpacity(0.1),
-                                            ],
-                                            begin: Alignment.bottomCenter,
-                                            end: Alignment.topCenter,
+                                      child: Center(
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+                                          decoration: BoxDecoration(
+                                            color: Colors.amber[900],
+                                            borderRadius: BorderRadius.circular(12),
                                           ),
-                                          borderRadius: BorderRadius.only(
-                                            bottomLeft: Radius.circular(12),
-                                            bottomRight: Radius.circular(12),
-                                          ),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                item['body'] ?? 'No description',
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                                maxLines: 2,
-                                              ),
+                                          child: Text(
+                                            '\$${price.toStringAsFixed(2)}',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
                                             ),
-                                            if (price > 0)
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                                child: Text(
-                                                  '\$${price.toStringAsFixed(2)}',
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                          ],
+                                          ),
                                         ),
                                       ),
                                     ),
+                                    // Phone icon at the bottom center
                                     Positioned(
+                                      bottom: 10,
+                                      left: 0,
                                       right: 0,
-                                      bottom: 0,
-                                      child: IconButton(
-                                        icon: Icon(Icons.phone, color: Colors.white),
-                                        onPressed: () {
-                                          final phoneNumber = item['user']?['phone'] ?? '';
-                                          if (phoneNumber.isNotEmpty) {
-                                            _launchWhatsApp(phoneNumber);
-                                          } else {
-                                            print('No phone number available');
-                                          }
-                                        },
+                                      child: Center(
+                                        child: IconButton(
+                                          icon: Icon(Icons.phone, color: Colors.amber[900]),
+                                          onPressed: () {
+                                            final phoneNumber = item['user']?['phone'] ?? '';
+                                            if (phoneNumber.isNotEmpty) {
+                                              _launchWhatsApp(phoneNumber);
+                                            } else {
+                                              print('No phone number available');
+                                            }
+                                          },
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -236,72 +212,105 @@ class _MyItemsTabState extends State<MyItemsTab> {
                   onTap: () {
                     _showGridView();
                   },
-                  child: Container(
-                    color: Colors.grey[700],
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: PageView.builder(
-                            itemCount: images.length,
-                            itemBuilder: (context, imageIndex) {
-                              final imageUrl = images.isNotEmpty
-                                  ? 'http://192.168.0.113:8000/storage/${images[imageIndex]}'
-                                  : 'http://192.168.0.113:8000/storage/default.jpg';
+                  child: Stack(
+                    children: [
+                      // PageView for images
+                      PageView.builder(
+                        itemCount: images.length,
+                        itemBuilder: (context, imageIndex) {
+                          final imageUrl = images.isNotEmpty
+                              ? 'http://192.168.0.113:8000/storage/${images[imageIndex]}'
+                              : 'http://192.168.0.113:8000/storage/default.jpg';
 
-                              return Image.network(
-                                imageUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Center(child: Text('Image failed to load'));
-                                },
-                              );
+                          return Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Center(child: Text('Image failed to load'));
                             },
+                          );
+                        },
+                      ),
+                      // Price at top center with amber background
+                      Positioned(
+                        top: 10,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.amber[900],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '\$${price.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
-                        Padding(
+                      ),
+                      // Gradient overlay at the bottom for product details
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
                           padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.black.withOpacity(0.7),
+                                Colors.transparent,
+                              ],
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  item['body'] ?? 'No description',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.left,
+                              // Product description
+                              Text(
+                                item['body'] ?? 'No description',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
                                 ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              if (price > 0)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                  child: Text(
-                                    '\$${price.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                              const SizedBox(height: 8),
+                              // Action buttons (WhatsApp, Call)
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.phone, color: Colors.amber[900]),
+                                    onPressed: () {
+                                      if (phoneNumber.isNotEmpty) {
+                                        _launchWhatsApp(phoneNumber);
+                                      } else {
+                                        print('No phone number available');
+                                      }
+                                    },
                                   ),
-                                ),
+                                ],
+                              ),
                             ],
                           ),
                         ),
-                        if (phoneNumber.isNotEmpty)
-                          IconButton(
-                            icon: Icon(Icons.phone, color: Colors.white),
-                            onPressed: () {
-                              _launchWhatsApp(phoneNumber);
-                            },
-                          ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 );
               },
+              physics: NeverScrollableScrollPhysics(), // Disable scrolling
             ),
     );
   }
