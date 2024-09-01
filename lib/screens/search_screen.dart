@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:vendvibe/screens/post_screen.dart';
+import 'package:vendvibe/screens/PostDetailScreen.dart';
 
 class SearchScreen extends StatefulWidget {
   @override
@@ -115,7 +115,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => PostScreen(postId: post['id']),
+                                    builder: (context) => PostDetailScreen( posts: _searchResults, // List of posts
+      initialIndex: index,),
                                   ),
                                 );
                               },

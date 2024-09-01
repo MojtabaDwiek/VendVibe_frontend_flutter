@@ -18,12 +18,11 @@ class CommentScreen extends StatefulWidget {
 class _CommentScreenState extends State<CommentScreen> {
   List<dynamic> _commentsList = [];
   bool _loading = true;
-  int userId = 0;
-  int _editCommentId = 0;
   final TextEditingController _txtCommentController = TextEditingController();
 
   Future<void> _getComments() async {
-    userId = await getUserId();
+    int userId = await getUserId();
+    print('Retrieved User ID: $userId'); // Debug print
     ApiResponse response = await getComments(widget.postId ?? 0);
 
     if (response.error == null) {
@@ -68,46 +67,6 @@ class _CommentScreenState extends State<CommentScreen> {
     }
   }
 
-  void _editComment() async {
-    ApiResponse response = await editComment(_editCommentId, _txtCommentController.text);
-
-    if (response.error == null) {
-      _editCommentId = 0;
-      _txtCommentController.clear();
-      _getComments();
-    } else if (response.error == unauthorized) {
-      logout().then((_) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => Login()),
-          (route) => false,
-        );
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${response.error}')),
-      );
-    }
-  }
-
-  void _deleteComment(int commentId) async {
-    ApiResponse response = await deleteComment(commentId);
-
-    if (response.error == null) {
-      _getComments();
-    } else if (response.error == unauthorized) {
-      logout().then((_) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => Login()),
-          (route) => false,
-        );
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${response.error}')),
-      );
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -118,9 +77,9 @@ class _CommentScreenState extends State<CommentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black, // Dark background for a sleek look
-        elevation: 0, // Flat look
-        leading: null, // Remove the back button
+        backgroundColor: Colors.black,
+        elevation: 0,
+        leading: null,
         actions: [
           IconButton(
             icon: Icon(Icons.close, color: Colors.white),
@@ -128,7 +87,7 @@ class _CommentScreenState extends State<CommentScreen> {
           ),
         ],
       ),
-      backgroundColor: Colors.black, // Dark background for comments
+      backgroundColor: Colors.black,
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
@@ -142,14 +101,14 @@ class _CommentScreenState extends State<CommentScreen> {
                       padding: const EdgeInsets.all(10),
                       margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
                       decoration: BoxDecoration(
-                        color: Colors.grey[800], // Slightly dark background for comments
+                        color: Colors.grey[800],
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.2),
                             spreadRadius: 2,
                             blurRadius: 5,
-                            offset: Offset(0, 3), // Shadow position
+                            offset: Offset(0, 3),
                           ),
                         ],
                       ),
@@ -168,35 +127,12 @@ class _CommentScreenState extends State<CommentScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      '${comment.user!.name}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    if (comment.user!.id == userId)
-                                      PopupMenuButton<String>(
-                                        icon: Icon(Icons.more_vert, color: Colors.white),
-                                        itemBuilder: (context) => [
-                                          const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                                          const PopupMenuItem(value: 'delete', child: Text('Delete')),
-                                        ],
-                                        onSelected: (val) {
-                                          if (val == 'edit') {
-                                            setState(() {
-                                              _editCommentId = comment.id ?? 0;
-                                              _txtCommentController.text = comment.comment ?? '';
-                                            });
-                                          } else if (val == 'delete') {
-                                            _deleteComment(comment.id ?? 0);
-                                          }
-                                        },
-                                      ),
-                                  ],
+                                Text(
+                                  '${comment.user!.name}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 const SizedBox(height: 5),
                                 Text(
@@ -215,35 +151,28 @@ class _CommentScreenState extends State<CommentScreen> {
                   bottom: 0,
                   left: 0,
                   right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    color: Colors.grey[900],
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
                     child: Row(
                       children: [
                         Expanded(
                           child: TextField(
+                            controller: _txtCommentController,
                             decoration: InputDecoration(
                               hintText: 'Add a comment...',
-                              hintStyle: TextStyle(color: Colors.grey[600]),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                              filled: true,
+                              fillColor: Colors.grey[700],
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
-                            style: const TextStyle(color: Colors.white),
-                            controller: _txtCommentController,
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.send, color: Colors.amber[900]!),
+                          icon: Icon(Icons.send, color: Colors.white),
                           onPressed: () {
                             if (_txtCommentController.text.isNotEmpty) {
-                              setState(() {
-                                _loading = true;
-                              });
-                              if (_editCommentId > 0) {
-                                _editComment();
-                              } else {
-                                _createComment();
-                              }
+                              _createComment();
                             }
                           },
                         ),
