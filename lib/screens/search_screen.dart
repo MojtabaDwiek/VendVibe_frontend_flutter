@@ -66,7 +66,7 @@ class _SearchScreenState extends State<SearchScreen> {
         backgroundColor: Colors.amber[900],
         title: TextField(
           controller: _searchController,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             hintText: 'Search...',
             border: InputBorder.none,
           ),
@@ -87,11 +87,11 @@ class _SearchScreenState extends State<SearchScreen> {
           children: [
             Expanded(
               child: _loading
-                  ? Center(child: CircularProgressIndicator())
+                  ? const Center(child: CircularProgressIndicator())
                   : _searchResults.isEmpty
-                      ? Center(child: Text('No results found', style: TextStyle(color: Colors.white)))
+                      ? const Center(child: Text('No results found', style: TextStyle(color: Colors.white)))
                       : GridView.builder(
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2, // Two items per row
                             crossAxisSpacing: 8.0, // Spacing between columns
                             mainAxisSpacing: 8.0, // Spacing between rows
@@ -144,7 +144,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                           imageUrl,
                                           fit: BoxFit.cover,
                                           errorBuilder: (context, error, stackTrace) {
-                                            return Center(child: Text('Image failed to load'));
+                                            return const Center(child: Text('Image failed to load'));
                                           },
                                         ),
                                       ),
@@ -165,7 +165,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                             begin: Alignment.bottomCenter,
                                             end: Alignment.topCenter,
                                           ),
-                                          borderRadius: BorderRadius.only(
+                                          borderRadius: const BorderRadius.only(
                                             bottomLeft: Radius.circular(12),
                                             bottomRight: Radius.circular(12),
                                           ),
@@ -180,14 +180,14 @@ class _SearchScreenState extends State<SearchScreen> {
                                                   backgroundImage: NetworkImage(userImage),
                                                   radius: 16,
                                                 ),
-                                                SizedBox(width: 8),
+                                                const SizedBox(width: 8),
                                                 Expanded(
                                                   child: Column(
                                                     crossAxisAlignment: CrossAxisAlignment.start,
                                                     children: [
                                                       Text(
                                                         userName,
-                                                        style: TextStyle(
+                                                        style: const TextStyle(
                                                           color: Colors.white,
                                                           fontSize: 14,
                                                           fontWeight: FontWeight.bold,
@@ -198,7 +198,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                                 ),
                                               ],
                                             ),
-                                            SizedBox(height: 8),
+                                            const SizedBox(height: 8),
                                             if (price > 0) // Check if price is greater than 0
                                               Padding(
                                                 padding: const EdgeInsets.only(bottom: 4.0),
