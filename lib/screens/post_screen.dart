@@ -1,18 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:vendvibe/constant.dart';
-import 'package:vendvibe/models/api_response.dart';
-import 'package:vendvibe/models/post.dart';
-import 'package:vendvibe/screens/comment_screen.dart';
-import 'package:vendvibe/services/post_service.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vendvibe/screens/PostDetailScreen.dart';
 import 'package:vendvibe/services/user_service.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'login.dart';
-import 'post_form.dart';
-import 'package:flutter/services.dart';
 
 class PostScreen extends StatefulWidget {
   const PostScreen({super.key, required this.postId});
-
   final int postId;
 
   @override
@@ -20,379 +14,222 @@ class PostScreen extends StatefulWidget {
 }
 
 class _PostScreenState extends State<PostScreen> {
-  List<dynamic> _postList = [];
-  int userId = 0;
+  List<dynamic> _posts = [];
   bool _loading = true;
-  Set<int> _favorites = Set<int>(); // To keep track of favorite posts
-
-  Future<void> retrievePosts() async {
-    userId = await getUserId();
-    ApiResponse response = await getPosts();
-
-    if (response.error == null) {
-      setState(() {
-        _postList = response.data as List<dynamic>;
-        print('Post list: $_postList'); // Debugging line
-        _loading = false;
-      });
-    } else if (response.error == unauthorized) {
-      logout().then((_) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => Login()),
-          (route) => false,
-        );
-      });
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('${response.error}'),
-        ));
-      }
-    }
-  }
-
-  void _handleDeletePost(int postId) async {
-    ApiResponse response = await deletePost(postId);
-    if (response.error == null) {
-      retrievePosts();
-    } else if (response.error == unauthorized) {
-      logout().then((_) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => Login()),
-          (route) => false,
-        );
-      });
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('${response.error}'),
-        ));
-      }
-    }
-  }
-
-  void _handlePostLikeDislike(int postId) async {
-    ApiResponse response = await likeUnlikePost(postId);
-
-    if (response.error == null) {
-      retrievePosts();
-    } else if (response.error == unauthorized) {
-      logout().then((_) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => Login()),
-          (route) => false,
-        );
-      });
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('${response.error}'),
-        ));
-      }
-    }
-  }
-
-  Future<void> _launchWhatsApp(String phoneNumber) async {
-    print('Original phone number: $phoneNumber');
-
-    if (phoneNumber.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Phone number is not available')),
-        );
-      }
-      return;
-    }
-
-    if (!phoneNumber.startsWith('+961')) {
-      phoneNumber = '+961$phoneNumber';
-    }
-
-    final url = 'https://wa.me/$phoneNumber';
-    print('WhatsApp URL: $url');
-
-    try {
-      final result = await canLaunch(url);
-      if (result) {
-        await launch(url);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not launch WhatsApp')),
-          );
-        }
-      }
-    } on PlatformException catch (e) {
-      print('Error launching WhatsApp: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch WhatsApp')),
-        );
-      }
-    }
-  }
-
-  Future<void> _toggleFavorite(int postId) async {
-    // Check if the post is already in favorites
-    bool isFavorite = _favorites.contains(postId);
-
-    // Toggle the favorite status
-    ApiResponse response;
-    if (isFavorite) {
-      response = await removePostFromFavorites(postId);
-      if (response.error == null) {
-        setState(() {
-          _favorites.remove(postId);
-        });
-      }
-    } else {
-      response = await addPostToFavorites(postId);
-      if (response.error == null) {
-        setState(() {
-          _favorites.add(postId);
-        });
-      }
-    }
-
-    if (response.error != null) {
-      if (response.error == unauthorized) {
-        logout().then((_) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => Login()),
-            (route) => false,
-          );
-        });
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('${response.error}'),
-          ));
-        }
-      }
-    }
-  }
 
   @override
   void initState() {
     super.initState();
-    retrievePosts();
+    _fetchPosts();
   }
+
+  Future<String?> _getAuthToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String token = await getToken();
+    print('Token fetched: $token'); // Debugging statement for token
+    return prefs.getString('token');
+  }
+
+  Future<void> _fetchPosts() async {
+  setState(() {
+    _loading = true;
+  });
+
+  final String? token = await _getAuthToken();
+  final Uri uri = Uri.parse('http://192.168.0.113:8000/api/posts');
+
+  try {
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = json.decode(response.body);
+      final List<dynamic> postsJson = data['posts'] ?? [];
+
+      setState(() {
+        _posts = postsJson;
+        _loading = false;
+      });
+    } else {
+      setState(() {
+        _posts = [];
+        _loading = false;
+      });
+    }
+  } catch (e) {
+    print('Error fetching posts: $e');
+    setState(() {
+      _posts = [];
+      _loading = false;
+    });
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
-    return _loading
-        ? const Center(child: CircularProgressIndicator())
-        : PageView.builder(
-            scrollDirection: Axis.vertical,
-            itemCount: _postList.length,
-            itemBuilder: (BuildContext context, int index) {
-              Post post = _postList[index];
-              bool isFavorite = _favorites.contains(post.id);
+    return Scaffold(
+      body: Container(
+        color: Colors.grey[700],
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : _posts.isEmpty
+                ? const Center(child: Text('No posts found', style: TextStyle(color: Colors.white)))
+                : GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2, // Two items per row
+                      crossAxisSpacing: 8.0, // Spacing between columns
+                      mainAxisSpacing: 8.0, // Spacing between rows
+                      childAspectRatio: 0.75, // Aspect ratio for card size
+                    ),
+                    itemCount: _posts.length,
+                    itemBuilder: (context, index) {
+                      final post = _posts[index];
+                      print('Building UI for Post $index: $post'); // Debugging post data
 
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  return Stack(
-                    children: [
-                      // Background container with black color
-                      Positioned.fill(
-                        child: Container(
-                          color: Colors.black,
-                        ),
-                      ),
-                      // Image carousel with smaller images
-                      Positioned.fill(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 50.0),
-                          child: post.images != null && post.images!.isNotEmpty
-                              ? PageView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: post.images!.length,
-                                  itemBuilder: (context, imgIndex) {
-                                    final imageUrl = post.images![imgIndex];
-                                    print('Image URL: $imageUrl'); // Debugging line
-                                    return SizedBox(
-                                      width: constraints.maxWidth, // Full width of the available space
-                                      height: constraints.maxHeight * 0.6, // Adjust height as needed
-                                      child: Image.network(
-                                        'http://192.168.0.113:8000/storage/$imageUrl',
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return const Center(child: Text('Image failed to load'));
-                                        },
-                                      ),
-                                    );
-                                  },
-                                )
-                              : const SizedBox(),
-                        ),
-                      ),
-                      // Post details
-                      Positioned(
-                        bottom: 20,
-                        left: 10,
-                        right: 10,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Display price if available
-                            if (post.price != null)
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber[900]!,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  '\$${post.price!.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                      // Access user details
+                      final user = post['user'] ?? {};
+                      final userName = user['name'] ?? 'Unknown';
+                      final userImage = user['image'] != null
+                          ? 'http://192.168.0.113:8000/storage/${user['image']}'
+                          : 'http://192.168.0.113:8000/storage/default-user.jpg';
+
+                      // Post image
+                      final imageUrl = post['images'] != null && post['images'].isNotEmpty
+                          ? 'http://192.168.0.113:8000/storage/${post['images'][0]}'
+                          : 'http://192.168.0.113:8000/storage/default.jpg';
+
+                      final priceString = post['price']?.toString() ?? '0.0';
+                      final price = double.tryParse(priceString) ?? 0.0;
+
+                      return GestureDetector(
+                        onTap: () {
+                          print('Post tapped: $post'); // Debugging on tap
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PostDetailScreen(
+                                posts: _posts, // List of posts
+                                initialIndex: index,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Card(
+                          elevation: 4.0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Stack(
+                            children: [
+                              // Background image
+                              Positioned.fill(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    imageUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      print('Image loading error: $error'); // Debugging image loading error
+                                      return Center(child: Text('Image failed to load'));
+                                    },
                                   ),
                                 ),
                               ),
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 20,
-                                  backgroundImage: post.user?.image != null
-                                      ? NetworkImage('${post.user!.image}')
-                                      : null,
-                                  backgroundColor: Colors.black,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    post.user?.name ?? 'Unknown',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
+                              // Overlay with post details
+                              Positioned(
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.black.withOpacity(0.7),
+                                        Colors.black.withOpacity(0.1),
+                                      ],
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
+                                    borderRadius: const BorderRadius.only(
+                                      bottomLeft: Radius.circular(12),
+                                      bottomRight: Radius.circular(12),
+                                    ),
                                   ),
-                                ),
-                                if (post.user?.id == userId)
-                                  PopupMenuButton(
-                                    icon: const Icon(Icons.more_vert, color: Colors.white),
-                                    itemBuilder: (context) => [
-                                      const PopupMenuItem(
-                                        value: 'edit',
-                                        child: Text('Edit'),
-                                      ),
-                                      const PopupMenuItem(
-                                        value: 'delete',
-                                        child: Text('Delete'),
-                                      ),
-                                    ],
-                                    onSelected: (val) {
-                                      if (val == 'edit') {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (context) => PostForm(
-                                              title: 'Edit Post',
-                                              post: post,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // User details
+                                      Row(
+                                        children: [
+                                          CircleAvatar(
+                                            backgroundImage: NetworkImage(userImage),
+                                            radius: 16,
+                                          ),
+                                          SizedBox(width: 8),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  userName,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                        );
-                                      } else if (val == 'delete') {
-                                        _handleDeletePost(post.id ?? 0);
-                                      }
-                                    },
+                                        ],
+                                      ),
+                                      SizedBox(height: 8),
+                                      if (price > 0) // Check if price is greater than 0
+                                        Padding(
+                                          padding: const EdgeInsets.only(bottom: 4.0),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 4.0, horizontal: 8.0),
+                                            decoration: BoxDecoration(
+                                              color: Colors.amber[900]!,
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              '\$${price.toStringAsFixed(2)}',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      Text(
+                                        post['body'] ?? 'No description',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 2, // Limit to two lines
+                                      ),
+                                    ],
                                   ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            _buildPostBody(post.body ?? '', post.id ?? 0),
-                            const SizedBox(height: 10),
-                          ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      // Action icons
-                      Positioned(
-                        right: 10,
-                        bottom: 100,
-                        child: Column(
-                          children: [
-                            _buildTikTokIcon(
-                              icon: post.selfLiked == true
-                                  ? Icons.favorite
-                                  : Icons.favorite_outline,
-                              color: post.selfLiked == true
-                                  ? Colors.red
-                                  : Colors.white,
-                              count: post.likesCount ?? 0,
-                              onTap: () {
-                                _handlePostLikeDislike(post.id ?? 0);
-                              },
-                            ),
-                            const SizedBox(height: 20),
-                            _buildTikTokIcon(
-                              icon: Icons.comment,
-                              count: post.commentsCount ?? 0,
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => CommentScreen(postId: post.id),
-                                  ),
-                                );
-                              },
-                            ),
-                            // WhatsApp icon
-                            const SizedBox(height: 20),
-                            _buildTikTokIcon(
-                              icon: Icons.phone,
-                              count: 0, // You can use this to display a specific count if needed
-                              onTap: () {
-                               if (post.user?.phoneNumber != null) {
-    _launchWhatsApp(post.user?.phoneNumber ?? '');
-                                }
-                              },
-                            ),
-                            // Save to Favorites icon
-                            const SizedBox(height: 20),
-                            _buildTikTokIcon(
-                              icon: isFavorite ? Icons.bookmark : Icons.bookmark_outline,
-                              color: isFavorite ? Colors.amber : Colors.white,
-                              count: 0, // You can use this to display a specific count if needed
-                              onTap: () {
-                                _toggleFavorite(post.id ?? 0);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-          );
-  }
-
-  Widget _buildPostBody(String body, int postId) {
-    // Wrap the body text with a Text widget and limit its length as desired
-    return Text(
-      body.length > 100 ? '${body.substring(0, 100)}...' : body,
-      style: const TextStyle(color: Colors.white, fontSize: 14),
-    );
-  }
-
-  Widget _buildTikTokIcon({
-    required IconData icon,
-    required int count,
-    required VoidCallback onTap,
-    Color? color,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Icon(icon, color: color ?? Colors.white, size: 30),
-          const SizedBox(height: 4),
-          Text(count.toString(), style: const TextStyle(color: Colors.white)),
-        ],
+                      );
+                    },
+                  ),
       ),
     );
   }

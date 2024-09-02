@@ -12,41 +12,44 @@ Future<ApiResponse> getPosts() async {
   ApiResponse apiResponse = ApiResponse();
   try {
     String token = await getToken();
-    final response = await http.get(
-      Uri.parse(postsURL),
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
+    print('Token: $token');
 
-    switch (response.statusCode) {
-      case 200:
-        final data = jsonDecode(response.body);
-        final List<dynamic> postsJson = data['posts'];
-
-        apiResponse.data = postsJson.map((p) {
-          try {
-            return Post.fromJson(p);
-          } catch (e) {
-            print('Error parsing post: $e');
-            return null;
+    // Simulate response for debugging
+    final data = {
+      'posts': [
+        {
+          'id': 1,
+          'body': 'Sample Post Description',
+          'price': 9.99,
+          'images': ['image1.jpg'],
+          'user': {
+            'name': 'Sample User',
+            'image': 'user-image.jpg'
           }
-        }).where((post) => post != null).toList();
-        break;
-      case 401:
-        apiResponse.error = unauthorized;
-        break;
-      default:
-        apiResponse.error = somethingWentWrong;
-        break;
-    }
+        }
+      ]
+    };
+    print('Simulated response data: $data');
+
+    final List<dynamic> postsJson = data['posts'] ?? [];
+    print('Simulated posts JSON: $postsJson');
+    
+    apiResponse.data = postsJson.map((p) {
+      try {
+        return Post.fromJson(p);
+      } catch (e) {
+        print('Error parsing post: $e');
+        return null;
+      }
+    }).where((post) => post != null).toList();
   } catch (e) {
     print('Error fetching posts: $e');
     apiResponse.error = serverError;
   }
   return apiResponse;
 }
+
+
 
 // Create post
 Future<ApiResponse> createPost(String body, List<File>? images, double? price) async {
