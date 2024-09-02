@@ -20,7 +20,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.0.113:8000/api/search'),
+        Uri.parse('http://192.168.0.113:8000/api/posts/search'),
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: {'query': query},
       );
@@ -33,7 +33,7 @@ class _SearchScreenState extends State<SearchScreen> {
           final data = json.decode(response.body);
           print('Decoded data: $data');
           setState(() {
-            _searchResults = data;
+            _searchResults = data['posts'] ?? [];
             _loading = false;
           });
         } catch (e) {
@@ -100,13 +100,20 @@ class _SearchScreenState extends State<SearchScreen> {
                           itemCount: _searchResults.length,
                           itemBuilder: (context, index) {
                             final post = _searchResults[index];
-                            final imageUrl = post['images'].isNotEmpty
+
+                            // Access user details
+                            final user = post['user'] ?? {};
+                            final userName = user['name'] ?? 'Unknown';
+                            
+                            final userImage = user['image'] != null
+                                ? 'http://192.168.0.113:8000/storage/${user['image']}'
+                                : 'http://192.168.0.113:8000/storage/default-user.jpg';
+
+                            // Post image
+                            final imageUrl = post['images'] != null && post['images'].isNotEmpty
                                 ? 'http://192.168.0.113:8000/storage/${post['images'][0]}'
-                                : 'http://192.168.0.113:8000/storage/default.jpg'; // Provide a default image URL
+                                : 'http://192.168.0.113:8000/storage/default.jpg';
 
-                            print('Image URL: $imageUrl');
-
-                            // Convert price to double if it's a string
                             final priceString = post['price']?.toString() ?? '0.0';
                             final price = double.tryParse(priceString) ?? 0.0;
 
@@ -115,8 +122,10 @@ class _SearchScreenState extends State<SearchScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => PostDetailScreen( posts: _searchResults, // List of posts
-      initialIndex: index,),
+                                    builder: (context) => PostDetailScreen(
+                                      posts: _searchResults, // List of posts
+                                      initialIndex: index,
+                                    ),
                                   ),
                                 );
                               },
@@ -164,6 +173,32 @@ class _SearchScreenState extends State<SearchScreen> {
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
+                                            // User details
+                                            Row(
+                                              children: [
+                                                CircleAvatar(
+                                                  backgroundImage: NetworkImage(userImage),
+                                                  radius: 16,
+                                                ),
+                                                SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        userName,
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 14,
+                                                          fontWeight: FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(height: 8),
                                             if (price > 0) // Check if price is greater than 0
                                               Padding(
                                                 padding: const EdgeInsets.only(bottom: 4.0),

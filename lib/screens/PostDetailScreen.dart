@@ -1,10 +1,15 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'package:vendvibe/constant.dart';
 import 'package:vendvibe/models/api_response.dart';
+import 'package:vendvibe/screens/login.dart';
+import 'package:vendvibe/services/post_service.dart';
 import 'package:vendvibe/services/user_service.dart';
-import 'comment_screen.dart'; // Add this import
+import 'comment_screen.dart'; // Import the CommentScreen
 
 class PostDetailScreen extends StatefulWidget {
   final List<dynamic> posts; // List of posts
@@ -19,6 +24,7 @@ class PostDetailScreen extends StatefulWidget {
 class _PostDetailScreenState extends State<PostDetailScreen> {
   late List<dynamic> posts;
   late int initialIndex;
+  final Set<int> _favorites = Set<int>();
 
   @override
   void initState() {
@@ -60,6 +66,90 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       apiResponse.error = serverError;
     }
     return apiResponse;
+  }
+
+  Future<void> _toggleFavorite(int postId) async {
+    // Check if the post is already in favorites
+    bool isFavorite = _favorites.contains(postId);
+
+    // Toggle the favorite status
+    ApiResponse response;
+    if (isFavorite) {
+      response = await removePostFromFavorites(postId);
+      if (response.error == null) {
+        setState(() {
+          _favorites.remove(postId);
+        });
+      }
+    } else {
+      response = await addPostToFavorites(postId);
+      if (response.error == null) {
+        setState(() {
+          _favorites.add(postId);
+        });
+      }
+    }
+
+    if (response.error != null) {
+      if (response.error == unauthorized) {
+        logout().then((_) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => Login()),
+            (route) => false,
+          );
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('${response.error}'),
+          ));
+        }
+      }
+    }
+  }
+
+  Future<void> _launchWhatsApp(String phoneNumber) async {
+    if (kDebugMode) {
+      print('Original phone number: $phoneNumber');
+    }
+
+    if (phoneNumber.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Phone number is not available')),
+        );
+      }
+      return;
+    }
+
+    if (!phoneNumber.startsWith('+961')) {
+      phoneNumber = '+961$phoneNumber';
+    }
+
+    final url = 'https://wa.me/$phoneNumber';
+    if (kDebugMode) {
+      print('WhatsApp URL: $url');
+    }
+
+    try {
+      final result = await canLaunch(url);
+      if (result) {
+        await launch(url);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not launch WhatsApp')),
+          );
+        }
+      }
+    } on PlatformException catch (e) {
+      print('Error launching WhatsApp: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch WhatsApp')),
+        );
+      }
+    }
   }
 
   @override
@@ -188,33 +278,35 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     ),
                     const SizedBox(height: 10),
                     // Comment button
-                   IconButton(
-  icon: Icon(Icons.comment, color: Colors.white),
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CommentScreen(postId: post['id']),
-      ),
-    );
-  },
-),
-Text('${post['commentsCount'] ?? 0}', style: TextStyle(color: Colors.white)),
+                    IconButton(
+                      icon: Icon(Icons.comment, color: Colors.white),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CommentScreen(postId: post['id']),
+                          ),
+                        );
+                      },
+                    ),
+                    Text('${post['commentsCount'] ?? 0}', style: TextStyle(color: Colors.white)),
                     const SizedBox(height: 25),
                     // Phone button
                     IconButton(
-                      icon: const Icon(Icons.phone, color: Colors.white, size: 30),
+                      icon: const Icon(Icons.phone, color: Colors.white),
                       onPressed: () {
-                        // Handle phone action
+                        final phoneNumber = post['user']?['phone_number']?.toString() ?? '';
+                        _launchWhatsApp(phoneNumber);
                       },
                     ),
-                    const SizedBox(height: 20),
-                    // Save favorite button
+                    const SizedBox(height: 25),
+                    // Save to favorites button
                     IconButton(
-                      icon: const Icon(Icons.save_alt, color: Colors.white, size: 30), // Save favorite icon
-                      onPressed: () {
-                        // Handle save favorite action
-                      },
+                      icon: Icon(
+                        _favorites.contains(post['id']) ? Icons.star : Icons.star_border,
+                        color: _favorites.contains(post['id']) ? Colors.yellow : Colors.white,
+                      ),
+                      onPressed: () => _toggleFavorite(post['id']),
                     ),
                   ],
                 ),
