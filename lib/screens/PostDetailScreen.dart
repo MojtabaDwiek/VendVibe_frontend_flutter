@@ -25,6 +25,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   late List<dynamic> posts;
   late int initialIndex;
   final Set<int> _favorites = Set<int>();
+  bool _isExpanded = false; // Track expanded state
 
   @override
   void initState() {
@@ -68,11 +69,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     return apiResponse;
   }
 
+  // Toggle favorite status
   Future<void> _toggleFavorite(int postId) async {
-    // Check if the post is already in favorites
     bool isFavorite = _favorites.contains(postId);
 
-    // Toggle the favorite status
     ApiResponse response;
     if (isFavorite) {
       response = await removePostFromFavorites(postId);
@@ -108,6 +108,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     }
   }
 
+  // Launch WhatsApp with the given phone number
   Future<void> _launchWhatsApp(String phoneNumber) async {
     if (kDebugMode) {
       print('Original phone number: $phoneNumber');
@@ -150,6 +151,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         );
       }
     }
+  }
+
+  // Toggle the expanded/collapsed state
+  void _toggleExpand() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+    });
   }
 
   @override
@@ -232,15 +240,37 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           ),
                         ),
                       // Post description
-                      Text(
-                        post['body'] ?? 'No description',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                      Container(
+                        decoration: BoxDecoration(
+                          color: _isExpanded ? Colors.grey[700] : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 4,
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              post['body'] ?? 'No description',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: _isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                              maxLines: _isExpanded ? null : 2,
+                            ),
+                            TextButton(
+                              onPressed: _toggleExpand,
+                              child: Text(
+                                _isExpanded ? 'View Less' : 'View More',
+                                style: TextStyle(
+                                  color: Colors.amber[900],
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -249,64 +279,65 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               // Action buttons (like, comment, phone, save favorite, etc.)
               Positioned(
                 right: 20,
-                top: MediaQuery.of(context).size.height * 0.5, // Adjusted to center vertically
+                top: MediaQuery.of(context).size.height * 0.35, // Adjusted to center vertically
                 child: Column(
                   children: [
-                    // Like button
-                    IconButton(
-                      icon: Icon(
-                        post['selfLiked'] == true ? Icons.favorite : Icons.favorite_border,
-                        color: post['selfLiked'] == true ? Colors.red : Colors.white,
-                        size: 30,
-                      ),
-                      onPressed: () async {
-                        final isLiked = post['selfLiked'] ?? false;
-                        final response = await _handlePostLikeDislike(post['id'] ?? 0, isLiked);
-                        if (response.error == null) {
-                          setState(() {
-                            // Toggle the like status and update the likes count
-                            post['selfLiked'] = !isLiked;
-                            post['likesCount'] = (post['likesCount'] ?? 0) + (post['selfLiked'] == true ? 1 : -1);
-                          });
-                        }
-                      },
-                    ),
-                    // Like count display
-                    Text(
-                      '${post['likesCount'] ?? 0}',
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 0),
                     // Comment button
-                    IconButton(
-                      icon: Icon(Icons.comment, color: Colors.white),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CommentScreen(postId: post['id']),
-                          ),
-                        );
-                      },
+                    Container(
+                      padding: const EdgeInsets.all(5.0), // Adjust padding as needed
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5), // Semi-transparent background
+                        shape: BoxShape.circle, // Circular background
+                      ),
+                      child: IconButton(
+                        iconSize: 20,
+                        icon: const Icon(Icons.comment, color: Colors.blue),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CommentScreen(postId: post['id']),
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                    Text('${post['commentsCount'] ?? 0}', style: TextStyle(color: Colors.white)),
                     const SizedBox(height: 25),
                     // Phone button
-                    IconButton(
-                      icon: const Icon(Icons.phone, color: Colors.white),
-                      onPressed: () {
-                        final phoneNumber = post['user']?['phone_number']?.toString() ?? '';
-                        _launchWhatsApp(phoneNumber);
-                      },
+                    Container(
+                      padding: const EdgeInsets.all(8.0), // Adjust padding as needed
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5), // Semi-transparent background
+                        shape: BoxShape.circle, // Circular background
+                      ),
+                      child: IconButton(
+                        iconSize: 20,
+                        icon:  const Icon(Icons.phone, color: Colors.green),
+                        onPressed: () {
+                          final phoneNumber = post['user']?['phone_number']?.toString() ?? '';
+                          _launchWhatsApp(phoneNumber);
+                        },
+                      ),
                     ),
                     const SizedBox(height: 25),
-                    // Save to favorites button
-                    IconButton(
-                      icon: Icon(
-                        _favorites.contains(post['id']) ? Icons.star : Icons.star_border,
-                        color: _favorites.contains(post['id']) ? Colors.yellow : Colors.white,
+                    // Save favorite button
+                    Container(
+                      padding: const EdgeInsets.all(8.0), // Adjust padding as needed
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5), // Semi-transparent background
+                        shape: BoxShape.circle, // Circular background
                       ),
-                      onPressed: () => _toggleFavorite(post['id']),
+                      child: IconButton(
+                        iconSize: 20,
+                        icon: Icon(
+                          _favorites.contains(post['id']) ? Icons.favorite : Icons.favorite_border,
+                          color: _favorites.contains(post['id']) ? Colors.red : Colors.white,
+                        ),
+                        onPressed: () {
+                          _toggleFavorite(post['id']);
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -314,7 +345,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             ],
           );
         },
-        controller: PageController(initialPage: initialIndex),
       ),
     );
   }
