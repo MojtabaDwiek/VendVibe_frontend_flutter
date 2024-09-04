@@ -72,26 +72,69 @@ class _HomeState extends State<Home> {
     });
   }
 
-  Future<bool> _onWillPop() async {
-    // Show a confirmation dialog when the user tries to close the app
-    return (await showDialog(
+  Future<void> _showLogoutConfirmation() async {
+    final shouldLogout = await showDialog<bool>(
       context: context,
+      barrierDismissible: false, // Prevent dismissing by tapping outside
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Exit App'),
-          content: const Text('Are you sure you want to exit the app?'),
+          backgroundColor: Colors.black,
+          title: const Text('Logout', style: TextStyle(color: Color.fromRGBO(255, 111, 0, 1))),
+          content: const Text(
+            'Are you sure you want to logout?',
+            style: TextStyle(color: Color.fromRGBO(255, 111, 0, 1)),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // Do not logout
+              },
+              child: const Text('Cancel', style: TextStyle(color: Color.fromRGBO(255, 111, 0, 1))),
+            ),
+            TextButton(
+              onPressed: () async {
+                await logout();
+                Navigator.of(context).pop(true); // Logout
+              },
+              child: const Text('Logout', style: TextStyle(color: Color.fromRGBO(255, 111, 0, 1))),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout == true) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => Login()),
+        (route) => false,
+      );
+    }
+  }
+
+  Future<bool> _onWillPop() async {
+    return (await showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing by tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.black,
+          title: const Text('Exit App', style: TextStyle(color: Color.fromRGBO(255, 111, 0, 1))),
+          content: const Text(
+            'Are you sure you want to exit the app?',
+            style: TextStyle(color: Color(0xFFFF6F00)),
+          ),
           actions: <Widget>[
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(false); // Do not exit the app
               },
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(color: Color.fromRGBO(255, 111, 0, 1))),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(true); // Exit the app
               },
-              child: const Text('Exit'),
+              child: const Text('Exit', style: TextStyle(color: Color.fromRGBO(255, 111, 0, 1))),
             ),
           ],
         );
@@ -143,13 +186,7 @@ class _HomeState extends State<Home> {
           actions: [
             IconButton(
               icon: const Icon(Icons.power_settings_new, color: Colors.white),
-              onPressed: () async {
-                await logout();
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => Login()),
-                  (route) => false,
-                );
-              },
+              onPressed: _showLogoutConfirmation,
             ),
           ],
         ),
@@ -183,12 +220,12 @@ class _HomeState extends State<Home> {
             });
             showSnackBar(index == 0 ? 'Home selected' : 'Profile selected');
           },
-          items: [
-            const BottomNavigationBarItem(
+          items: const [
+            BottomNavigationBarItem(
               icon: Icon(Icons.home),
               label: 'Home',
             ),
-            const BottomNavigationBarItem(
+            BottomNavigationBarItem(
               icon: Icon(Icons.person),
               label: 'Profile',
             ),

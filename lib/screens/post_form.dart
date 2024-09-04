@@ -191,13 +191,13 @@ class _PostFormState extends State<PostForm> {
       ),
       backgroundColor: Colors.grey[900],
       body: _loading
-          ? Center(
-              child: CircularProgressIndicator(),
+          ? const Center(
+              child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color.fromRGBO(255, 111, 0, 1)),),
             )
           : Stack(
               children: [
                 _imageFiles.isEmpty
-                    ? Center(
+                    ? const Center(
                         child: Text(
                           'Tap the camera icon to select images',
                           style: TextStyle(color: Colors.white, fontSize: 18),

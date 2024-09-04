@@ -69,9 +69,9 @@ class _MyItemsTabState extends State<MyItemsTab> {
       body: Container(
         color: Colors.grey[700],
         child: _loading
-            ? Center(child: CircularProgressIndicator())
+            ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color.fromRGBO(255, 111, 0, 1)),))
             : _items.isEmpty
-                ? Center(child: Text('No items found', style: TextStyle(color: Colors.white)))
+                ? const Center(child: Text('No items found', style: TextStyle(color: Colors.white)))
                 : _isGridView
                     ? GridView.builder(
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

@@ -198,7 +198,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       imageUrl,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
-                        return const Center(child: Text('Image failed to load', style: TextStyle(color: Colors.white)));
+                        return  const Center(child: Text('Image failed to load', style: TextStyle(color: Colors.black)));
                       },
                     );
                   },
@@ -294,7 +294,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     const SizedBox(height: 0),
                     // Comment button
                     Container(
-                      padding: const EdgeInsets.all(5.0), // Adjust padding as needed
+                      padding: const EdgeInsets.all(4.0), // Adjust padding as needed
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.5), // Semi-transparent background
                         shape: BoxShape.circle, // Circular background
@@ -315,7 +315,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     const SizedBox(height: 25),
                     // Phone button
                     Container(
-                      padding: const EdgeInsets.all(8.0), // Adjust padding as needed
+                      padding: const EdgeInsets.all(4.0), // Adjust padding as needed
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.5), // Semi-transparent background
                         shape: BoxShape.circle, // Circular background
@@ -332,7 +332,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     const SizedBox(height: 25),
                     // Save favorite button
                     Container(
-                      padding: const EdgeInsets.all(8.0), // Adjust padding as needed
+                      padding: const EdgeInsets.all(4.0), // Adjust padding as needed
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.5), // Semi-transparent background
                         shape: BoxShape.circle, // Circular background
