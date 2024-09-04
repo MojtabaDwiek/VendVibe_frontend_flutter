@@ -62,10 +62,44 @@ class _FavoritesTabState extends State<FavoritesTab> {
     }
   }
 
+  Future<void> _removeFromFavorites(int postId) async {
+    setState(() {
+      _loading = true;
+    });
+
+    final String? token = await _getAuthToken();
+    final Uri uri = Uri.parse('http://192.168.0.113:8000/api/posts/$postId/favorites');
+
+    try {
+      final response = await http.delete(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _favorites.removeWhere((post) => post['id'] == postId);
+          _loading = false;
+        });
+      } else {
+        // Handle error response
+        setState(() {
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      // Handle exception
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       body: Container(
         color: Colors.grey[700],
         child: _loading
@@ -212,6 +246,53 @@ class _FavoritesTabState extends State<FavoritesTab> {
                                       ),
                                     ],
                                   ),
+                                ),
+                              ),
+                              // Action button to remove from favorites
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () {showDialog(
+  context: context,
+  builder: (BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.black, // Add this line
+      title: Text(
+        'Confirm Deletion',
+        style: TextStyle(color: Colors.amber[900]), // Add this line
+      ),
+      content: Text(
+        'Are you sure you want to delete this post?',
+        style: TextStyle(color: Colors.amber[900]), // Add this line
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text(
+            'Cancel',
+            style: TextStyle(color: Colors.amber[900]), // Add this line
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+            _removeFromFavorites(post['id']);
+          },
+          child: Text(
+            'Delete',
+            style: TextStyle(color: Colors.amber[900]), // Add this line
+          ),
+        ),
+      ],
+    );
+  },
+);
+                                    
+                                  },
                                 ),
                               ),
                             ],

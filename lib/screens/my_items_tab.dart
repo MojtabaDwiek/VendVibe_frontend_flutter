@@ -62,10 +62,38 @@ class _MyItemsTabState extends State<MyItemsTab> {
     }
   }
 
+  Future<void> _deletePost(int postId, int index) async {
+    final String? token = await _getAuthToken();
+    final Uri uri = Uri.parse('http://192.168.0.113:8000/api/posts/$postId');
+
+    try {
+      final response = await http.delete(
+        uri,
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('Post deleted: ${data['message']}');
+
+        setState(() {
+          _items.removeAt(index);
+        });
+      } else {
+        final data = json.decode(response.body);
+        print('Failed to delete post: ${data['message']}');
+      }
+    } catch (e) {
+      print('Error deleting post: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       body: Container(
         color: Colors.grey[700],
         child: _loading
@@ -83,11 +111,8 @@ class _MyItemsTabState extends State<MyItemsTab> {
                         itemCount: _items.length,
                         itemBuilder: (context, index) {
                           final item = _items[index];
-                          final user = item['user'] ?? {};
-                          final userName = user['name'] ?? 'Unknown';
-                          final userImage = user['image'] != null
-                              ? 'http://192.168.0.113:8000/storage/${user['image']}'
-                              : 'http://192.168.0.113:8000/storage/default-user.jpg';
+                         
+                        
 
                           final imageUrl = item['images'] != null && item['images'].isNotEmpty
                               ? 'http://192.168.0.113:8000/storage/${item['images'][0]}'
@@ -122,9 +147,55 @@ class _MyItemsTabState extends State<MyItemsTab> {
                                         imageUrl,
                                         fit: BoxFit.cover,
                                         errorBuilder: (context, error, stackTrace) {
-                                          return Center(child: Text('Image failed to load'));
+                                          return const Center(child: Text('Image failed to load'));
                                         },
                                       ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: IconButton(
+                                      icon: const Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () {
+                                        showDialog(
+  context: context,
+  builder: (BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.black, // Add this line
+      title: Text(
+        'Confirm Deletion',
+        style: TextStyle(color: Colors.amber[900]), // Add this line
+      ),
+      content: Text(
+        'Are you sure you want to delete this post?',
+        style: TextStyle(color: Colors.amber[900]), // Add this line
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text(
+            'Cancel',
+            style: TextStyle(color: Colors.amber[900]), // Add this line
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+            _deletePost(item['id'], index);
+          },
+          child: Text(
+            'Delete',
+            style: TextStyle(color: Colors.amber[900]), // Add this line
+          ),
+        ),
+      ],
+    );
+  },
+);
+                                      },
                                     ),
                                   ),
                                   Positioned(
@@ -150,25 +221,7 @@ class _MyItemsTabState extends State<MyItemsTab> {
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Row(
-                                            children: [
-                                              CircleAvatar(
-                                                backgroundImage: NetworkImage(userImage),
-                                                radius: 16,
-                                              ),
-                                              SizedBox(width: 8),
-                                              Expanded(
-                                                child: Text(
-                                                  userName,
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                                         
                                           SizedBox(height: 8),
                                           if (price > 0)
                                             Padding(
@@ -215,7 +268,6 @@ class _MyItemsTabState extends State<MyItemsTab> {
                         itemBuilder: (context, index) {
                           final item = _items[index];
                           final images = item['images'] as List<dynamic>? ?? [];
-                          final phoneNumber = item['user']?['phone'] ?? '';
 
                           return GestureDetector(
                             onTap: () {
@@ -236,7 +288,7 @@ class _MyItemsTabState extends State<MyItemsTab> {
                                       imageUrl,
                                       fit: BoxFit.cover,
                                       errorBuilder: (context, error, stackTrace) {
-                                        return Center(child: Text('Image failed to load'));
+                                        return const Center(child: Text('Image failed to load'));
                                       },
                                     );
                                   },
@@ -256,39 +308,120 @@ class _MyItemsTabState extends State<MyItemsTab> {
                                         begin: Alignment.bottomCenter,
                                         end: Alignment.topCenter,
                                       ),
+                                      borderRadius: const BorderRadius.only(
+                                        bottomLeft: Radius.circular(12),
+                                        bottomRight: Radius.circular(12),
+                                      ),
                                     ),
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
+                                        Row(
+                                          children: [
+                                            CircleAvatar(
+                                              backgroundImage: NetworkImage(
+                                                item['user']?['image'] != null
+                                                    ? 'http://192.168.0.113:8000/storage/${item['user']['image']}'
+                                                    : 'http://192.168.0.113:8000/storage/default-user.jpg',
+                                              ),
+                                              radius: 16,
+                                            ),
+                                            SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                item['user']?['name'] ?? 'Unknown',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 8),
+                                        if (item['price'] != null && item['price'] > 0)
+                                          Padding(
+                                            padding: const EdgeInsets.only(bottom: 4.0),
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                  vertical: 4.0, horizontal: 8.0),
+                                              decoration: BoxDecoration(
+                                                color: Colors.amber[900]!,
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                '\$${item['price'].toStringAsFixed(2)}',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
                                         Text(
                                           item['body'] ?? 'No description',
                                           style: const TextStyle(
                                             color: Colors.white,
-                                            fontSize: 14,
+                                            fontSize: 12,
                                             fontWeight: FontWeight.bold,
                                           ),
-                                          maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
-                                        ),
-                                        SizedBox(height: 8),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.end,
-                                          children: [
-                                            IconButton(
-                                              icon: Icon(Icons.phone, color: Colors.amber[900]),
-                                              onPressed: () {
-                                                if (phoneNumber.isNotEmpty) {
-                                                  final url = 'https://wa.me/$phoneNumber';
-                                                  launch(url);
-                                                } else {
-                                                  print('No phone number available');
-                                                }
-                                              },
-                                            ),
-                                          ],
+                                          maxLines: 2,
                                         ),
                                       ],
                                     ),
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title: const Text('Confirm Deletion'),
+                                            content: const Text('Are you sure you want to delete this post?'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: const Text('Cancel'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                  _deletePost(item['id'], index);
+                                                },
+                                                child: Text('Delete'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 8,
+                                  left: 8,
+                                  child: IconButton(
+                                    icon: Icon(Icons.phone, color: Colors.white),
+                                    onPressed: () async {
+                                      final phoneNumber = item['user']['phone'] ?? '';
+                                      final url = 'tel:$phoneNumber';
+
+                                      if (await canLaunch(url)) {
+                                        await launch(url);
+                                      } else {
+                                        throw 'Could not launch $url';
+                                      }
+                                    },
                                   ),
                                 ),
                               ],

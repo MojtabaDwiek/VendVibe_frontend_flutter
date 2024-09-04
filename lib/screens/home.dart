@@ -203,7 +203,7 @@ class _HomeState extends State<Home> {
                 ),
               ),
             );
-            showSnackBar('Navigating to Post Form');
+          
           },
           child: Icon(Icons.add, color: Colors.amber[900]!),
           shape: RoundedRectangleBorder(
@@ -218,7 +218,7 @@ class _HomeState extends State<Home> {
             setState(() {
               _currentIndex = index;
             });
-            showSnackBar(index == 0 ? 'Home selected' : 'Profile selected');
+            
           },
           items: const [
             BottomNavigationBarItem(
