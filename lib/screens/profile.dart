@@ -94,8 +94,15 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return loading
-        ? const Center(child: CircularProgressIndicator())
+     return loading
+      ? Container(
+          color: Colors.grey[700], // Set background color to grey[700]
+          child: Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.amber[900]!), // Amber circle icon
+            ),
+          ),
+        )
         : Scaffold(
             body: Column(
               children: [

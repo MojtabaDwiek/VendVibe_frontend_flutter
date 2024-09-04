@@ -76,7 +76,7 @@ class _PostScreenState extends State<PostScreen> {
       body: Container(
         color: Colors.grey[700],
         child: _loading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color.fromRGBO(255, 111, 0, 1)),))
             : _posts.isEmpty
                 ? const Center(child: Text('No posts found', style: TextStyle(color: Colors.white)))
                 : GridView.builder(

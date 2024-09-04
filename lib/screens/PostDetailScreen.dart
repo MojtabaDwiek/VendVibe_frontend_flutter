@@ -26,12 +26,20 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   late int initialIndex;
   final Set<int> _favorites = Set<int>();
   bool _isExpanded = false; // Track expanded state
+  late PageController _pageController;
 
   @override
   void initState() {
     super.initState();
     posts = widget.posts;
     initialIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   // Handle like/dislike functionality
@@ -165,6 +173,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: PageView.builder(
+        controller: _pageController,
         itemCount: posts.length,
         scrollDirection: Axis.vertical,
         itemBuilder: (context, index) {
@@ -313,7 +322,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       ),
                       child: IconButton(
                         iconSize: 20,
-                        icon:  const Icon(Icons.phone, color: Colors.green),
+                        icon: const Icon(Icons.phone, color: Colors.green),
                         onPressed: () {
                           final phoneNumber = post['user']?['phone_number']?.toString() ?? '';
                           _launchWhatsApp(phoneNumber);

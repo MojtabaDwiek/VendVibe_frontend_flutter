@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 
 import 'login.dart';
 
-
 class Loading extends StatefulWidget {
   @override
   _LoadingState createState() => _LoadingState();
@@ -43,11 +42,34 @@ class _LoadingState extends State<Loading> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height,
-      color: Colors.white,
-      child: Center(
-        child: CircularProgressIndicator()
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'VV',
+              style: TextStyle(
+                fontSize: 64,
+                fontWeight: FontWeight.bold,
+                color: Colors.amber[900],
+              ),
+            ),
+            SizedBox(height: 20),
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.amber[900]!),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'Loading...',
+              style: TextStyle(
+                color: Colors.amber[900],
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
