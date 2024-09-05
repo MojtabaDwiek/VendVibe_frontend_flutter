@@ -82,7 +82,7 @@ class _RegisterState extends State<Register> {
                 ),
               ),
             ),
-            const SizedBox(height: 50), // Adjusted for spacing after the text
+            const SizedBox(height: 35), // Adjusted for spacing after the text
             TextFormField(
               controller: nameController,
               validator: (val) => val!.isEmpty ? 'Invalid name' : null,

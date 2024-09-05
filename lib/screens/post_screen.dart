@@ -95,9 +95,7 @@ class _PostScreenState extends State<PostScreen> {
                         // Access user details
                         final user = post['user'] ?? {};
                         final userName = user['name'] ?? 'Unknown';
-                        final userImage = user['image'] != null
-                            ? 'http://192.168.0.113:8000/storage/${user['image']}'
-                            : 'http://192.168.0.113:8000/storage/default-user.jpg';
+                        
 
                         // Post image
                         final imageUrl = post['images'] != null && post['images'].isNotEmpty
@@ -168,11 +166,7 @@ class _PostScreenState extends State<PostScreen> {
                                         // User details
                                         Row(
                                           children: [
-                                            CircleAvatar(
-                                              backgroundImage: NetworkImage(userImage),
-                                              radius: 16,
-                                            ),
-                                            SizedBox(width: 8),
+                                            
                                             Expanded(
                                               child: Column(
                                                 crossAxisAlignment: CrossAxisAlignment.start,

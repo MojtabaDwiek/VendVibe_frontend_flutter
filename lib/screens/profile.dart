@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:vendvibe/models/api_response.dart';
 import 'package:vendvibe/models/user.dart';
 import 'package:vendvibe/services/user_service.dart';
@@ -19,19 +17,8 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
   User? user;
   bool loading = true;
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  File? _imageFile;
-  final _picker = ImagePicker();
   TextEditingController txtNameController = TextEditingController();
   late TabController _tabController;
-
-  Future<void> getImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
-    }
-  }
 
   void getUser() async {
     ApiResponse response = await getUserDetail();
@@ -54,10 +41,9 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
       );
     }
   }
-  
 
   void updateProfile() async {
-    ApiResponse response = await updateUser(txtNameController.text, getStringImage(_imageFile));
+    ApiResponse response = await updateUser(txtNameController.text, null); // No image handling
     setState(() {
       loading = false;
     });
@@ -94,15 +80,15 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-     return loading
-      ? Container(
-          color: Colors.grey[700], // Set background color to grey[700]
-          child: Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.amber[900]!), // Amber circle icon
+    return loading
+        ? Container(
+            color: Colors.grey[700], // Set background color to grey[700]
+            child: Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.amber[900]!), // Amber circle icon
+              ),
             ),
-          ),
-        )
+          )
         : Scaffold(
             body: Column(
               children: [
@@ -128,23 +114,6 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                         padding: EdgeInsets.all(20),
                         child: ListView(
                           children: [
-                            Center(
-                              child: GestureDetector(
-                                onTap: getImage,
-                                child: CircleAvatar(
-                                  radius: 60,
-                                  backgroundColor: Colors.amber[900],
-                                  backgroundImage: _imageFile != null
-                                      ? FileImage(_imageFile!)
-                                      : user?.image != null
-                                          ? NetworkImage('${user!.image}')
-                                          : null,
-                                  child: _imageFile == null && user?.image == null
-                                      ? Icon(Icons.camera_alt, color: Colors.white, size: 30)
-                                      : null,
-                                ),
-                              ),
-                            ),
                             SizedBox(height: 20),
                             Form(
                               key: formKey,
