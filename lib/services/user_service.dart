@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:vendvibe/constant.dart';
 import 'package:vendvibe/models/api_response.dart';
 import 'package:vendvibe/models/user.dart';
@@ -127,7 +128,9 @@ Future<ApiResponse> updateUser(String name, String? image) async {
         apiResponse.error = unauthorized;
         break;
       default:
-        print(response.body);
+        if (kDebugMode) {
+          print(response.body);
+        }
         apiResponse.error = somethingWentWrong;
         break;
     }

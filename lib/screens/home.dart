@@ -1,3 +1,6 @@
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:vendvibe/screens/post_screen.dart';
 import 'package:vendvibe/screens/profile.dart';
@@ -36,12 +39,14 @@ void main() {
           unselectedLabelStyle: const TextStyle(color: Colors.white70), // Label color when not selected
         ),
       ),
-      home: Home(),
+      home: const Home(),
     ),
   );
 }
 
 class Home extends StatefulWidget {
+  const Home({super.key});
+
   @override
   _HomeState createState() => _HomeState();
 }
@@ -51,7 +56,7 @@ class _HomeState extends State<Home> {
 
   Future<void> _refreshPage() async {
     // Your refresh logic here, e.g., retrieving posts
-    await Future.delayed(Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 2));
     setState(() {
       // Trigger the refresh
     });
@@ -67,7 +72,9 @@ class _HomeState extends State<Home> {
           ),
         );
       } else {
-        print('ScaffoldMessenger is not available');
+        if (kDebugMode) {
+          print('ScaffoldMessenger is not available');
+        }
       }
     });
   }
@@ -105,7 +112,7 @@ class _HomeState extends State<Home> {
 
     if (shouldLogout == true) {
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => Login()),
+        MaterialPageRoute(builder: (context) => const Login()),
         (route) => false,
       );
     }
@@ -160,7 +167,7 @@ class _HomeState extends State<Home> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SearchScreen()), // Navigate to SearchScreen
+                MaterialPageRoute(builder: (context) => const SearchScreen()), // Navigate to SearchScreen
               );
             },
           ),
@@ -192,24 +199,24 @@ class _HomeState extends State<Home> {
         ),
         body: RefreshIndicator(
           onRefresh: _refreshPage,
-          child: _currentIndex == 0 ? const PostScreen(postId: 0) : Profile(),
+          child: _currentIndex == 0 ? const PostScreen(postId: 0) : const Profile(),
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => PostForm(
+                builder: (context) => const PostForm(
                   title: 'Add new post',
                 ),
               ),
             );
           
           },
-          child: Icon(Icons.add, color: Colors.amber[900]!),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15), // Rounded rectangle shape
           ),
           backgroundColor: Colors.white,
+          child: Icon(Icons.add, color: Colors.amber[900]!),
         ),
         floatingActionButtonLocation: CustomFloatingActionButtonLocation(),
         bottomNavigationBar: BottomNavigationBar(

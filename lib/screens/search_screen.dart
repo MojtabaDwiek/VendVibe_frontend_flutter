@@ -1,15 +1,20 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:vendvibe/screens/PostDetailScreen.dart';
 
 class SearchScreen extends StatefulWidget {
+  const SearchScreen({super.key});
+
   @override
   _SearchScreenState createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   List<dynamic> _searchResults = [];
   bool _loading = false;
 
@@ -25,33 +30,45 @@ class _SearchScreenState extends State<SearchScreen> {
         body: {'query': query},
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      if (kDebugMode) {
+        print('Response status: ${response.statusCode}');
+      }
+      if (kDebugMode) {
+        print('Response body: ${response.body}');
+      }
 
       if (response.statusCode == 200) {
         try {
           final data = json.decode(response.body);
-          print('Decoded data: $data');
+          if (kDebugMode) {
+            print('Decoded data: $data');
+          }
           setState(() {
             _searchResults = data['posts'] ?? [];
             _loading = false;
           });
         } catch (e) {
-          print('Error decoding JSON: $e');
+          if (kDebugMode) {
+            print('Error decoding JSON: $e');
+          }
           setState(() {
             _searchResults = [];
             _loading = false;
           });
         }
       } else {
-        print('Error: ${response.reasonPhrase}');
+        if (kDebugMode) {
+          print('Error: ${response.reasonPhrase}');
+        }
         setState(() {
           _searchResults = [];
           _loading = false;
         });
       }
     } catch (e) {
-      print('Error performing search: $e');
+      if (kDebugMode) {
+        print('Error performing search: $e');
+      }
       setState(() {
         _searchResults = [];
         _loading = false;

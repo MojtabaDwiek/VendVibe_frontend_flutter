@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -157,7 +159,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                                     imageUrl,
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
-                                      return Center(child: Text('Image failed to load'));
+                                      return const Center(child: Text('Image failed to load'));
                                     },
                                   ),
                                 ),
@@ -206,7 +208,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                                           ),
                                         ],
                                       ),
-                                      SizedBox(height: 8),
+                                      const SizedBox(height: 8),
                                       if (price > 0) // Check if price is greater than 0
                                         Padding(
                                           padding: const EdgeInsets.only(bottom: 4.0),

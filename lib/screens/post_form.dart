@@ -1,4 +1,7 @@
+// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
+
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -15,7 +18,7 @@ class PostForm extends StatefulWidget {
   final Post? post;
   final String? title;
 
-  PostForm({this.post, this.title});
+  const PostForm({super.key, this.post, this.title});
 
   @override
   _PostFormState createState() => _PostFormState();
@@ -94,7 +97,9 @@ class _PostFormState extends State<PostForm> {
 
   void _createPost() async {
     if (!_formKey.currentState!.validate()) {
-      print("Form validation failed.");
+      if (kDebugMode) {
+        print("Form validation failed.");
+      }
       return;
     }
 
@@ -117,11 +122,13 @@ class _PostFormState extends State<PostForm> {
     } else if (response.error == unauthorized) {
       await logout();
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => Login()),
+        MaterialPageRoute(builder: (context) => const Login()),
         (route) => false,
       );
     } else {
-      print("API Response Error: ${response.error}");
+      if (kDebugMode) {
+        print("API Response Error: ${response.error}");
+      }
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('${response.error}'),
       ));
@@ -130,12 +137,16 @@ class _PostFormState extends State<PostForm> {
 
   void _editPost(int? postId) async {
     if (postId == null) {
-      print("Post ID is null");
+      if (kDebugMode) {
+        print("Post ID is null");
+      }
       return;
     }
 
     if (!_formKey.currentState!.validate()) {
-      print("Form validation failed.");
+      if (kDebugMode) {
+        print("Form validation failed.");
+      }
       return;
     }
 
@@ -159,11 +170,13 @@ class _PostFormState extends State<PostForm> {
     } else if (response.error == unauthorized) {
       await logout();
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => Login()),
+        MaterialPageRoute(builder: (context) => const Login()),
         (route) => false,
       );
     } else {
-      print("API Response Error: ${response.error}");
+      if (kDebugMode) {
+        print("API Response Error: ${response.error}");
+      }
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('${response.error}'),
       ));
@@ -218,7 +231,7 @@ class _PostFormState extends State<PostForm> {
                   right: 0,
                   child: Container(
                     color: Colors.grey[850],
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -245,11 +258,11 @@ class _PostFormState extends State<PostForm> {
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide.none,
                                   ),
-                                  contentPadding: EdgeInsets.all(16),
+                                  contentPadding: const EdgeInsets.all(16),
                                 ),
-                                style: TextStyle(color: Colors.white),
+                                style: const TextStyle(color: Colors.white),
                               ),
-                              SizedBox(height: 10),
+                              const SizedBox(height: 10),
                               TextFormField(
                                 controller: _txtControllerPrice,
                                 keyboardType: TextInputType.number,
@@ -261,16 +274,15 @@ class _PostFormState extends State<PostForm> {
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide.none,
                                   ),
-                                  contentPadding: EdgeInsets.all(16),
+                                  contentPadding: const EdgeInsets.all(16),
                                 ),
-                                style: TextStyle(color: Colors.white),
+                                style: const TextStyle(color: Colors.white),
                               ),
-                              SizedBox(height: 20),
+                              const SizedBox(height: 20),
                               ElevatedButton(
                                 onPressed: widget.post != null 
                                     ? (widget.post!.id != null ? () => _editPost(widget.post!.id) : null) 
                                     : _createPost,
-                                child: Text(widget.post != null ? 'Update Post' : 'Create Post'),
                                 style: ElevatedButton.styleFrom(
                                   foregroundColor: Colors.white, 
                                   backgroundColor: Colors.amber[900]!,
@@ -278,8 +290,9 @@ class _PostFormState extends State<PostForm> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   padding: const EdgeInsets.symmetric(vertical: 16),
-                                  textStyle: TextStyle(fontSize: 16),
+                                  textStyle: const TextStyle(fontSize: 16),
                                 ),
+                                child: Text(widget.post != null ? 'Update Post' : 'Create Post'),
                               ),
                             ],
                           ),

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
+
 import 'package:vendvibe/models/api_response.dart';
 import 'package:vendvibe/models/user.dart';
 import 'package:vendvibe/services/user_service.dart';
@@ -9,6 +11,8 @@ import 'home.dart';
 import 'register.dart';
 
 class Login extends StatefulWidget {
+  const Login({super.key});
+
   @override
   _LoginState createState() => _LoginState();
 }
@@ -37,7 +41,7 @@ class _LoginState extends State<Login> {
     SharedPreferences pref = await SharedPreferences.getInstance();
     await pref.setString('token', user.token ?? '');
     await pref.setInt('userId', user.id ?? 0);
-    Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => Home()), (route) => false);
+    Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => const Home()), (route) => false);
   }
 
   @override
@@ -58,7 +62,7 @@ class _LoginState extends State<Login> {
                 ),
               ),
             ),
-            SizedBox(height: 0), // Spacing between logo and text
+            const SizedBox(height: 0), // Spacing between logo and text
             Center(
               child: Text(
                 'Welcome Back to VendVibe', // Replace with your desired text
@@ -69,7 +73,7 @@ class _LoginState extends State<Login> {
                 ),
               ),
             ),
-            SizedBox(height: 50), // Adjusted for spacing after the text
+            const SizedBox(height: 50), // Adjusted for spacing after the text
             TextFormField(
               keyboardType: TextInputType.emailAddress,
               controller: txtEmail,
@@ -88,15 +92,15 @@ class _LoginState extends State<Login> {
                 ),
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.red),
+                  borderSide: const BorderSide(color: Colors.red),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.red),
+                  borderSide: const BorderSide(color: Colors.red),
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextFormField(
               controller: txtPassword,
               obscureText: true,
@@ -115,17 +119,17 @@ class _LoginState extends State<Login> {
                 ),
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.red),
+                  borderSide: const BorderSide(color: Colors.red),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.red),
+                  borderSide: const BorderSide(color: Colors.red),
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             loading
-                ? Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator())
                 : ElevatedButton(
                     onPressed: () {
                       if (formkey.currentState!.validate()) {
@@ -139,12 +143,12 @@ class _LoginState extends State<Login> {
                       foregroundColor: Colors.black,
                       backgroundColor: Colors.amber[700], // Amber color
                     ),
-                    child: Text('Login'),
+                    child: const Text('Login'),
                   ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             kLoginRegisterHint('Don\'t have an account? ', 'Register', () {
               Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => Register()), (route) => false);
+                  MaterialPageRoute(builder: (context) => const Register()), (route) => false);
             })
           ],
         ),

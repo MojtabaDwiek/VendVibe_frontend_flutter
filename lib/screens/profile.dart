@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:vendvibe/models/api_response.dart';
 import 'package:vendvibe/models/user.dart';
@@ -9,6 +11,8 @@ import 'favorites_tab.dart';
 import 'my_items_tab.dart';
 
 class Profile extends StatefulWidget {
+  const Profile({super.key});
+
   @override
   _ProfileState createState() => _ProfileState();
 }
@@ -31,7 +35,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
     } else if (response.error == unauthorized) {
       logout().then((value) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => Login()),
+          MaterialPageRoute(builder: (context) => const Login()),
           (route) => false,
         );
       });
@@ -54,7 +58,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
     } else if (response.error == unauthorized) {
       logout().then((value) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => Login()),
+          MaterialPageRoute(builder: (context) => const Login()),
           (route) => false,
         );
       });
@@ -99,7 +103,7 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                     labelColor: Colors.amber[900],
                     indicatorColor: Colors.amber[900],
                     unselectedLabelColor: Colors.white,
-                    tabs: [
+                    tabs: const [
                       Tab(text: 'Profile', icon: Icon(Icons.person)),
                       Tab(text: 'Favorites', icon: Icon(Icons.favorite)),
                       Tab(text: 'My Items', icon: Icon(Icons.list)),
@@ -111,10 +115,10 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                     controller: _tabController,
                     children: [
                       Padding(
-                        padding: EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(20),
                         child: ListView(
                           children: [
-                            SizedBox(height: 20),
+                            const SizedBox(height: 20),
                             Form(
                               key: formKey,
                               child: Column(
@@ -124,18 +128,18 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                     'Name',
                                     style: TextStyle(color: Colors.amber[900], fontSize: 16, fontWeight: FontWeight.bold),
                                   ),
-                                  SizedBox(height: 8),
+                                  const SizedBox(height: 8),
                                   TextFormField(
                                     decoration: InputDecoration(
                                       filled: true,
                                       fillColor: Colors.grey[800],
-                                      border: OutlineInputBorder(),
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                      border: const OutlineInputBorder(),
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                     ),
                                     controller: txtNameController,
                                     validator: (val) => val!.isEmpty ? 'Invalid Name' : null,
                                   ),
-                                  SizedBox(height: 20),
+                                  const SizedBox(height: 20),
                                   ElevatedButton(
                                     onPressed: () {
                                       if (formKey.currentState!.validate()) {
@@ -147,10 +151,10 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                     },
                                     style: ElevatedButton.styleFrom(
                                       foregroundColor: Colors.white, backgroundColor: Colors.amber[900],
-                                      padding: EdgeInsets.symmetric(vertical: 14),
-                                      textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                     ),
-                                    child: Text('Update'),
+                                    child: const Text('Update'),
                                   ),
                                 ],
                               ),
@@ -158,8 +162,8 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                           ],
                         ),
                       ),
-                      FavoritesTab(),
-                      MyItemsTab(),
+                      const FavoritesTab(),
+                      const MyItemsTab(),
                     ],
                   ),
                 ),

@@ -1,4 +1,7 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,7 +29,9 @@ class _PostScreenState extends State<PostScreen> {
   Future<String?> _getAuthToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = await getToken();
-    print('Token fetched: $token'); // Debugging statement for token
+    if (kDebugMode) {
+      print('Token fetched: $token');
+    } // Debugging statement for token
     return prefs.getString('token');
   }
 
@@ -61,7 +66,9 @@ class _PostScreenState extends State<PostScreen> {
         });
       }
     } catch (e) {
-      print('Error fetching posts: $e');
+      if (kDebugMode) {
+        print('Error fetching posts: $e');
+      }
       setState(() {
         _posts = [];
         _loading = false;
@@ -90,7 +97,9 @@ class _PostScreenState extends State<PostScreen> {
                       itemCount: _posts.length,
                       itemBuilder: (context, index) {
                         final post = _posts[index];
-                        print('Building UI for Post $index: $post'); // Debugging post data
+                        if (kDebugMode) {
+                          print('Building UI for Post $index: $post');
+                        } // Debugging post data
 
                         // Access user details
                         final user = post['user'] ?? {};
@@ -107,7 +116,9 @@ class _PostScreenState extends State<PostScreen> {
 
                         return GestureDetector(
                           onTap: () {
-                            print('Post tapped: $post'); // Debugging on tap
+                            if (kDebugMode) {
+                              print('Post tapped: $post');
+                            } // Debugging on tap
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -133,8 +144,10 @@ class _PostScreenState extends State<PostScreen> {
                                       imageUrl,
                                       fit: BoxFit.cover,
                                       errorBuilder: (context, error, stackTrace) {
-                                        print('Image loading error: $error'); // Debugging image loading error
-                                        return Center(child: Text('Image failed to load'));
+                                        if (kDebugMode) {
+                                          print('Image loading error: $error');
+                                        } // Debugging image loading error
+                                        return const Center(child: Text('Image failed to load'));
                                       },
                                     ),
                                   ),
@@ -184,7 +197,7 @@ class _PostScreenState extends State<PostScreen> {
                                             ),
                                           ],
                                         ),
-                                        SizedBox(height: 8),
+                                        const SizedBox(height: 8),
                                         if (price > 0) // Check if price is greater than 0
                                           Padding(
                                             padding: const EdgeInsets.only(bottom: 4.0),

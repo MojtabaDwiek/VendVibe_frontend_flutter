@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 import 'package:vendvibe/models/api_response.dart';
 import 'package:vendvibe/models/user.dart';
@@ -49,7 +51,7 @@ class _RegisterState extends State<Register> {
     await pref.setString('token', user.token ?? '');
     await pref.setInt('userId', user.id ?? 0);
     Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => Home()), (route) => false);
+        MaterialPageRoute(builder: (context) => const Home()), (route) => false);
   }
 
   @override
@@ -237,7 +239,7 @@ class _RegisterState extends State<Register> {
             const SizedBox(height: 20),
             kLoginRegisterHint('Already have an account? ', 'Login', () {
               Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => Login()), (route) => false);
+                  MaterialPageRoute(builder: (context) => const Login()), (route) => false);
             })
           ],
         ),

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:vendvibe/models/api_response.dart';
@@ -12,7 +13,9 @@ Future<ApiResponse> getPosts() async {
   ApiResponse apiResponse = ApiResponse();
   try {
     String token = await getToken();
-    print('Token: $token');
+    if (kDebugMode) {
+      print('Token: $token');
+    }
 
     // Simulate response for debugging
     final data = {
@@ -29,21 +32,29 @@ Future<ApiResponse> getPosts() async {
         }
       ]
     };
-    print('Simulated response data: $data');
+    if (kDebugMode) {
+      print('Simulated response data: $data');
+    }
 
     final List<dynamic> postsJson = data['posts'] ?? [];
-    print('Simulated posts JSON: $postsJson');
+    if (kDebugMode) {
+      print('Simulated posts JSON: $postsJson');
+    }
     
     apiResponse.data = postsJson.map((p) {
       try {
         return Post.fromJson(p);
       } catch (e) {
-        print('Error parsing post: $e');
+        if (kDebugMode) {
+          print('Error parsing post: $e');
+        }
         return null;
       }
     }).where((post) => post != null).toList();
   } catch (e) {
-    print('Error fetching posts: $e');
+    if (kDebugMode) {
+      print('Error fetching posts: $e');
+    }
     apiResponse.error = serverError;
   }
   return apiResponse;
@@ -92,7 +103,9 @@ Future<ApiResponse> createPost(String body, List<File>? images, double? price) a
       
     }
   } catch (e) {
-    print('Error creating post: $e');
+    if (kDebugMode) {
+      print('Error creating post: $e');
+    }
     apiResponse.error = serverError;
   }
   return apiResponse;
@@ -140,7 +153,9 @@ Future<ApiResponse> editPost(int postId, String body, List<File>? images, double
         break;
     }
   } catch (e) {
-    print('Error editing post: $e');
+    if (kDebugMode) {
+      print('Error editing post: $e');
+    }
     apiResponse.error = serverError;
   }
   return apiResponse;
@@ -174,7 +189,9 @@ Future<ApiResponse> deletePost(int postId) async {
         break;
     }
   } catch (e) {
-    print('Error deleting post: $e');
+    if (kDebugMode) {
+      print('Error deleting post: $e');
+    }
     apiResponse.error = serverError;
   }
   return apiResponse;
@@ -205,7 +222,9 @@ Future<ApiResponse> likeUnlikePost(int postId) async {
         break;
     }
   } catch (e) {
-    print('Error liking/unliking post: $e');
+    if (kDebugMode) {
+      print('Error liking/unliking post: $e');
+    }
     apiResponse.error = serverError;
   }
   return apiResponse;
@@ -227,14 +246,22 @@ Future<ApiResponse> addPostToFavorites(int postId) async {
       body: jsonEncode({'post_id': postId}), // Send post_id in the body
     );
 
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
+    if (kDebugMode) {
+      print('Response status: ${response.statusCode}');
+    }
+    if (kDebugMode) {
+      print('Response body: ${response.body}');
+    }
 
     switch (response.statusCode) {
       case 200:
         final responseData = jsonDecode(response.body);
-        print('Response message: ${responseData['message']}');
-        print('Favorite data: ${responseData['favorite']}');
+        if (kDebugMode) {
+          print('Response message: ${responseData['message']}');
+        }
+        if (kDebugMode) {
+          print('Favorite data: ${responseData['favorite']}');
+        }
         apiResponse.data = responseData['message'];
         break;
       case 401:
@@ -247,7 +274,9 @@ Future<ApiResponse> addPostToFavorites(int postId) async {
      
     }
   } catch (e) {
-    print('Error adding post to favorites: $e');
+    if (kDebugMode) {
+      print('Error adding post to favorites: $e');
+    }
     apiResponse.error = serverError;
   }
   return apiResponse;
@@ -280,7 +309,9 @@ Future<ApiResponse> removePostFromFavorites(int postId) async {
         break;
     }
   } catch (e) {
-    print('Error removing post from favorites: $e');
+    if (kDebugMode) {
+      print('Error removing post from favorites: $e');
+    }
     apiResponse.error = serverError;
   }
   return apiResponse;

@@ -1,4 +1,7 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,6 +9,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:vendvibe/screens/PostDetailScreen.dart';
 
 class MyItemsTab extends StatefulWidget {
+  const MyItemsTab({super.key});
+
   @override
   _MyItemsTabState createState() => _MyItemsTabState();
 }
@@ -77,17 +82,23 @@ class _MyItemsTabState extends State<MyItemsTab> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('Post deleted: ${data['message']}');
+        if (kDebugMode) {
+          print('Post deleted: ${data['message']}');
+        }
 
         setState(() {
           _items.removeAt(index);
         });
       } else {
         final data = json.decode(response.body);
-        print('Failed to delete post: ${data['message']}');
+        if (kDebugMode) {
+          print('Failed to delete post: ${data['message']}');
+        }
       }
     } catch (e) {
-      print('Error deleting post: $e');
+      if (kDebugMode) {
+        print('Error deleting post: $e');
+      }
     }
   }
 
@@ -222,7 +233,7 @@ class _MyItemsTabState extends State<MyItemsTab> {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                          
-                                          SizedBox(height: 8),
+                                          const SizedBox(height: 8),
                                           if (price > 0)
                                             Padding(
                                               padding: const EdgeInsets.only(bottom: 4.0),
@@ -326,7 +337,7 @@ class _MyItemsTabState extends State<MyItemsTab> {
                                               ),
                                               radius: 16,
                                             ),
-                                            SizedBox(width: 8),
+                                            const SizedBox(width: 8),
                                             Expanded(
                                               child: Text(
                                                 item['user']?['name'] ?? 'Unknown',
@@ -339,7 +350,7 @@ class _MyItemsTabState extends State<MyItemsTab> {
                                             ),
                                           ],
                                         ),
-                                        SizedBox(height: 8),
+                                        const SizedBox(height: 8),
                                         if (item['price'] != null && item['price'] > 0)
                                           Padding(
                                             padding: const EdgeInsets.only(bottom: 4.0),
@@ -398,7 +409,7 @@ class _MyItemsTabState extends State<MyItemsTab> {
                                                   Navigator.of(context).pop();
                                                   _deletePost(item['id'], index);
                                                 },
-                                                child: Text('Delete'),
+                                                child: const Text('Delete'),
                                               ),
                                             ],
                                           );
@@ -411,7 +422,7 @@ class _MyItemsTabState extends State<MyItemsTab> {
                                   top: 8,
                                   left: 8,
                                   child: IconButton(
-                                    icon: Icon(Icons.phone, color: Colors.white),
+                                    icon: const Icon(Icons.phone, color: Colors.white),
                                     onPressed: () async {
                                       final phoneNumber = item['user']['phone'] ?? '';
                                       final url = 'tel:$phoneNumber';

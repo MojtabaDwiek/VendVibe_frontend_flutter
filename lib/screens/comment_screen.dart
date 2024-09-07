@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:vendvibe/models/api_response.dart';
 import 'package:vendvibe/models/comment.dart';
@@ -9,7 +11,7 @@ import 'login.dart';
 class CommentScreen extends StatefulWidget {
   final int? postId;
 
-  const CommentScreen({this.postId});
+  const CommentScreen({super.key, this.postId});
 
   @override
   _CommentScreenState createState() => _CommentScreenState();
@@ -33,11 +35,12 @@ class _CommentScreenState extends State<CommentScreen> {
     } else if (response.error == unauthorized) {
       logout().then((_) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => Login()),
+          MaterialPageRoute(builder: (context) => const Login()),
           (route) => false,
         );
       });
     } else {
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${response.error}')),
       );
@@ -53,7 +56,7 @@ class _CommentScreenState extends State<CommentScreen> {
     } else if (response.error == unauthorized) {
       logout().then((_) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => Login()),
+          MaterialPageRoute(builder: (context) => const Login()),
           (route) => false,
         );
       });
@@ -82,7 +85,7 @@ class _CommentScreenState extends State<CommentScreen> {
         leading: null,
         actions: [
           IconButton(
-            icon: Icon(Icons.close, color: Colors.white),
+            icon: const Icon(Icons.close, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
         ],
@@ -108,7 +111,7 @@ class _CommentScreenState extends State<CommentScreen> {
                             color: Colors.black.withOpacity(0.2),
                             spreadRadius: 2,
                             blurRadius: 5,
-                            offset: Offset(0, 3),
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
@@ -169,7 +172,7 @@ class _CommentScreenState extends State<CommentScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.send, color: Colors.white),
+                          icon: const Icon(Icons.send, color: Colors.white),
                           onPressed: () {
                             if (_txtCommentController.text.isNotEmpty) {
                               _createComment();

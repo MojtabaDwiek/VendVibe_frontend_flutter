@@ -1,8 +1,8 @@
-import 'dart:convert';
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vendvibe/constant.dart';
 import 'package:vendvibe/models/api_response.dart';
@@ -15,7 +15,7 @@ class PostDetailScreen extends StatefulWidget {
   final List<dynamic> posts; // List of posts
   final int initialIndex; // Index of the initial post to show
 
-  PostDetailScreen({required this.posts, required this.initialIndex});
+  const PostDetailScreen({super.key, required this.posts, required this.initialIndex});
 
   @override
   _PostDetailScreenState createState() => _PostDetailScreenState();
@@ -24,7 +24,7 @@ class PostDetailScreen extends StatefulWidget {
 class _PostDetailScreenState extends State<PostDetailScreen> {
   late List<dynamic> posts;
   late int initialIndex;
-  final Set<int> _favorites = Set<int>();
+  final Set<int> _favorites = <int>{};
   bool _isExpanded = false; // Track expanded state
   late PageController _pageController;
 
@@ -43,39 +43,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   // Handle like/dislike functionality
-  Future<ApiResponse> _handlePostLikeDislike(int postId, bool isLiked) async {
-    ApiResponse apiResponse = ApiResponse();
-    try {
-      String token = await getToken();
-      final response = await http.post(
-        Uri.parse('$postsURL/$postId/likes'),
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'liked': !isLiked}), // Include the liked state in the request
-      );
-
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
-      switch (response.statusCode) {
-        case 200:
-          apiResponse.data = jsonDecode(response.body)['message'];
-          break;
-        case 401:
-          apiResponse.error = unauthorized;
-          break;
-        default:
-          apiResponse.error = somethingWentWrong;
-          break;
-      }
-    } catch (e) {
-      print('Error liking/unliking post: $e');
-      apiResponse.error = serverError;
-    }
-    return apiResponse;
-  }
 
   // Toggle favorite status
   Future<void> _toggleFavorite(int postId) async {
@@ -102,7 +69,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       if (response.error == unauthorized) {
         logout().then((_) {
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => Login()),
+            MaterialPageRoute(builder: (context) => const Login()),
             (route) => false,
           );
         });
@@ -152,7 +119,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         }
       }
     } on PlatformException catch (e) {
-      print('Error launching WhatsApp: $e');
+      if (kDebugMode) {
+        print('Error launching WhatsApp: $e');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not launch WhatsApp')),
