@@ -1,5 +1,3 @@
-// ignore_for_file: library_private_types_in_public_api
-
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -32,8 +30,6 @@ class _SearchScreenState extends State<SearchScreen> {
 
       if (kDebugMode) {
         print('Response status: ${response.statusCode}');
-      }
-      if (kDebugMode) {
         print('Response body: ${response.body}');
       }
 
@@ -122,9 +118,6 @@ class _SearchScreenState extends State<SearchScreen> {
                             final user = post['user'] ?? {};
                             final userName = user['name'] ?? 'Unknown';
                             
-                            final userImage = user['image'] != null
-                                ? 'http://192.168.0.113:8000/storage/${user['image']}'
-                                : 'http://192.168.0.113:8000/storage/default-user.jpg';
 
                             // Post image
                             final imageUrl = post['images'] != null && post['images'].isNotEmpty
@@ -190,29 +183,20 @@ class _SearchScreenState extends State<SearchScreen> {
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            // User details
+                                            // Remove profile image
                                             Row(
                                               children: [
-                                                CircleAvatar(
-                                                  backgroundImage: NetworkImage(userImage),
-                                                  radius: 16,
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      Text(
-                                                        userName,
-                                                        style: const TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 14,
-                                                          fontWeight: FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                    ],
+                                                // Remove CircleAvatar
+                                                // Show userName only if it's not 'Unknown'
+                                                if (userName != 'Unknown')
+                                                  Text(
+                                                    userName,
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
                                                   ),
-                                                ),
                                               ],
                                             ),
                                             const SizedBox(height: 8),
@@ -243,7 +227,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                                 fontWeight: FontWeight.bold,
                                               ),
                                               overflow: TextOverflow.ellipsis,
-                                              maxLines: 2, // Limit to two lines
+                                              maxLines: 1, // Limit to two lines
                                             ),
                                           ],
                                         ),

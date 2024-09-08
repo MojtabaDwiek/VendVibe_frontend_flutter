@@ -22,32 +22,54 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
   bool loading = true;
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
   TextEditingController txtNameController = TextEditingController();
+  TextEditingController txtPhoneController = TextEditingController();
   late TabController _tabController;
 
-  void getUser() async {
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    getUser();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    txtNameController.dispose();
+    txtPhoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> getUser() async {
     ApiResponse response = await getUserDetail();
     if (response.error == null) {
       setState(() {
         user = response.data as User;
+        txtNameController.text = user?.name ?? '';
+        txtPhoneController.text = user?.phoneNumber ?? '';
         loading = false;
-        txtNameController.text = user!.name ?? '';
       });
-    } else if (response.error == unauthorized) {
-      logout().then((value) {
+    } else {
+      if (response.error == unauthorized) {
+        await logout();
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const Login()),
           (route) => false,
         );
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${response.error}')),
-      );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${response.error}')),
+        );
+      }
     }
   }
 
-  void updateProfile() async {
-    ApiResponse response = await updateUser(txtNameController.text, null); // No image handling
+  Future<void> updateProfile() async {
+    ApiResponse response = await updateUser(
+      txtNameController.text,
+      txtPhoneController.text,
+      null, // Assuming no image is updated in this context
+    );
     setState(() {
       loading = false;
     });
@@ -55,41 +77,29 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${response.data}')),
       );
-    } else if (response.error == unauthorized) {
-      logout().then((value) {
+    } else {
+      if (response.error == unauthorized) {
+        await logout();
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const Login()),
           (route) => false,
         );
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${response.error}')),
-      );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${response.error}')),
+        );
+      }
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    getUser();
-    _tabController = TabController(length: 3, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return loading
         ? Container(
-            color: Colors.grey[700], // Set background color to grey[700]
+            color: Colors.grey[700],
             child: Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.amber[900]!), // Amber circle icon
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.amber[900]!),
               ),
             ),
           )
@@ -126,7 +136,11 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                 children: [
                                   Text(
                                     'Name',
-                                    style: TextStyle(color: Colors.amber[900], fontSize: 16, fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                      color: Colors.amber[900],
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   const SizedBox(height: 8),
                                   TextFormField(
@@ -140,6 +154,27 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                     validator: (val) => val!.isEmpty ? 'Invalid Name' : null,
                                   ),
                                   const SizedBox(height: 20),
+                                  Text(
+                                    'Phone Number',
+                                    style: TextStyle(
+                                      color: Colors.amber[900],
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.grey[800],
+                                      border: const OutlineInputBorder(),
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    ),
+                                    controller: txtPhoneController,
+                                    keyboardType: TextInputType.phone,
+                                    validator: (val) => val!.isEmpty ? 'Invalid Phone Number' : null,
+                                  ),
+                                  const SizedBox(height: 20),
                                   ElevatedButton(
                                     onPressed: () {
                                       if (formKey.currentState!.validate()) {
@@ -150,7 +185,8 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                       }
                                     },
                                     style: ElevatedButton.styleFrom(
-                                      foregroundColor: Colors.white, backgroundColor: Colors.amber[900],
+                                      foregroundColor: Colors.white,
+                                      backgroundColor: Colors.amber[900],
                                       padding: const EdgeInsets.symmetric(vertical: 14),
                                       textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                     ),

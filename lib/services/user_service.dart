@@ -105,7 +105,7 @@ Future<ApiResponse> getUserDetail() async {
 }
 
 // Update user
-Future<ApiResponse> updateUser(String name, String? image) async {
+Future<ApiResponse> updateUser(String name, String? phoneNumber, String? image) async {
   ApiResponse apiResponse = ApiResponse();
   try {
     String token = await getToken();
@@ -114,31 +114,46 @@ Future<ApiResponse> updateUser(String name, String? image) async {
       headers: {
         'Accept': 'application/json',
         'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json', // Specify content type
       },
-      body: image == null
-          ? {'name': name}
-          : {'name': name, 'image': image},
+      body: jsonEncode({
+        'name': name,
+        'phone_number': phoneNumber,
+        'image': image,
+      }),
     );
 
     switch (response.statusCode) {
       case 200:
+        // Assuming the response body contains a 'message' field
         apiResponse.data = jsonDecode(response.body)['message'];
         break;
       case 401:
         apiResponse.error = unauthorized;
         break;
+      case 400:
+        // Handle bad request, potentially include error details
+        final Map<String, dynamic> errorResponse = jsonDecode(response.body);
+        apiResponse.error = errorResponse['message'] ?? somethingWentWrong;
+        break;
       default:
+        // Log full response body for debugging
         if (kDebugMode) {
-          print(response.body);
+          print('Response body: ${response.body}');
         }
         apiResponse.error = somethingWentWrong;
         break;
     }
   } catch (e) {
+    // Catch and log specific error
+    if (kDebugMode) {
+      print('Error occurred: $e');
+    }
     apiResponse.error = serverError;
   }
   return apiResponse;
 }
+
 
 // get token
 Future<String> getToken() async {
