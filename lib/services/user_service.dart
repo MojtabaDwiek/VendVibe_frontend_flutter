@@ -163,3 +163,37 @@ String? getStringImage(File? file) {
   if (file == null) return null;
   return base64Encode(file.readAsBytesSync());
 }
+
+Future<ApiResponse> resetPassword(String email, String password, String passwordConfirm) async {
+  ApiResponse apiResponse = ApiResponse();
+  
+  try {
+    final response = await http.post(
+      Uri.parse('$baseURL/password-reset'),
+      headers: {
+        'Accept': 'application/json',
+      },
+      body: {
+        'email': email,
+        'password': password,
+        'password_confirmation': passwordConfirm,
+      },
+    );
+
+    switch (response.statusCode) {
+      case 200:
+        apiResponse.data = jsonDecode(response.body)['message'];
+        break;
+      case 422:
+        apiResponse.error = jsonDecode(response.body)['errors'];
+        break;
+      default:
+        apiResponse.error = 'An error occurred';
+        break;
+    }
+  } catch (e) {
+    apiResponse.error = 'Server error';
+  }
+
+  return apiResponse;
+}

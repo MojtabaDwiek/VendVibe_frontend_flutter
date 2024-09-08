@@ -2,6 +2,7 @@
 
 import 'package:vendvibe/models/api_response.dart';
 import 'package:vendvibe/models/user.dart';
+import 'package:vendvibe/screens/passwordresetscreen.dart';
 import 'package:vendvibe/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constant.dart';
 import 'home.dart';
 import 'register.dart';
+
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -25,14 +27,14 @@ class _LoginState extends State<Login> {
 
   void _loginUser() async {
     ApiResponse response = await login(txtEmail.text, txtPassword.text);
-    if (response.error == null){
+    if (response.error == null) {
       _saveAndRedirectToHome(response.data as User);
     } else {
       setState(() {
         loading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('${response.error}')
+        content: Text('${response.error}'),
       ));
     }
   }
@@ -41,7 +43,10 @@ class _LoginState extends State<Login> {
     SharedPreferences pref = await SharedPreferences.getInstance();
     await pref.setString('token', user.token ?? '');
     await pref.setInt('userId', user.id ?? 0);
-    Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => const Home()), (route) => false);
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const Home()),
+      (route) => false,
+    );
   }
 
   @override
@@ -128,6 +133,24 @@ class _LoginState extends State<Login> {
               ),
             ),
             const SizedBox(height: 10),
+            // Forgot Password Link
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ForgotPassword(),
+                    ),
+                  );
+                },
+                child: Text(
+                  'Forgot Password?',
+                  style: TextStyle(color: Colors.amber[700]),
+                ),
+              ),
+            ),
             loading
                 ? const Center(child: CircularProgressIndicator())
                 : ElevatedButton(
@@ -148,7 +171,9 @@ class _LoginState extends State<Login> {
             const SizedBox(height: 20),
             kLoginRegisterHint('Don\'t have an account? ', 'Register', () {
               Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const Register()), (route) => false);
+                MaterialPageRoute(builder: (context) => const Register()),
+                (route) => false,
+              );
             })
           ],
         ),
