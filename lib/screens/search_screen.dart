@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:vendvibe/constant.dart';
 import 'package:vendvibe/screens/PostDetailScreen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -23,7 +24,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.0.113:8000/api/posts/search'),
+        Uri.parse('$postsURL/search'),
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: {'query': query},
       );

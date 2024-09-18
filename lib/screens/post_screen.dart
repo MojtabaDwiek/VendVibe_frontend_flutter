@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vendvibe/constant.dart';
 import 'package:vendvibe/screens/PostDetailScreen.dart';
 import 'package:vendvibe/services/user_service.dart';
 
@@ -41,7 +42,7 @@ class _PostScreenState extends State<PostScreen> {
     });
 
     final String? token = await _getAuthToken();
-    final Uri uri = Uri.parse('http://192.168.0.113:8000/api/posts');
+    final Uri uri = Uri.parse(postsURL);
 
     try {
       final response = await http.get(

@@ -141,7 +141,15 @@ class _RegisterState extends State<Register> {
             TextFormField(
               controller: phoneController,
               keyboardType: TextInputType.phone,
-              validator: (val) => val!.isEmpty ? 'Invalid phone number' : null,
+              validator: (val) {
+                if (val!.isEmpty) {
+                  return 'Invalid phone number';
+                }
+                if (val.length != 8 || !RegExp(r'^\d+$').hasMatch(val)) {
+                  return 'Phone Number must be 8 digits';
+                }
+                return null; // Return null if validation passes
+              },
               decoration: InputDecoration(
                 labelText: 'Phone',
                 labelStyle: TextStyle(fontSize: 16, color: Colors.amber[700]),

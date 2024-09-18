@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vendvibe/constant.dart';
 import 'package:vendvibe/screens/PostDetailScreen.dart';
 
 class MyItemsTab extends StatefulWidget {
@@ -37,7 +38,7 @@ class _MyItemsTabState extends State<MyItemsTab> {
     });
 
     final String? token = await _getAuthToken();
-    final Uri uri = Uri.parse('http://192.168.0.113:8000/api/user/user-items');
+    final Uri uri = Uri.parse('$userURL/user-items');
 
     try {
       final response = await http.get(
@@ -69,7 +70,7 @@ class _MyItemsTabState extends State<MyItemsTab> {
 
   Future<void> _deletePost(int postId, int index) async {
     final String? token = await _getAuthToken();
-    final Uri uri = Uri.parse('http://192.168.0.113:8000/api/posts/$postId');
+    final Uri uri = Uri.parse('$postsURL/$postId');
 
     try {
       final response = await http.delete(

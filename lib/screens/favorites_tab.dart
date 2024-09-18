@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vendvibe/constant.dart';
 import 'package:vendvibe/screens/PostDetailScreen.dart';
 
 class FavoritesTab extends StatefulWidget {
@@ -34,7 +35,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
     });
 
     final String? token = await _getAuthToken();
-    final Uri uri = Uri.parse('http://192.168.0.113:8000/api/user/favorites');
+    final Uri uri = Uri.parse('$userURL/favorites');
 
     try {
       final response = await http.get(
@@ -70,7 +71,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
     });
 
     final String? token = await _getAuthToken();
-    final Uri uri = Uri.parse('http://192.168.0.113:8000/api/posts/$postId/favorites');
+    final Uri uri = Uri.parse('$postsURL/$postId/favorites');
 
     try {
       final response = await http.delete(

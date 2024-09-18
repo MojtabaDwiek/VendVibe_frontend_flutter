@@ -1,5 +1,3 @@
-// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:vendvibe/models/api_response.dart';
 import 'package:vendvibe/models/user.dart';
@@ -172,7 +170,15 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                     ),
                                     controller: txtPhoneController,
                                     keyboardType: TextInputType.phone,
-                                    validator: (val) => val!.isEmpty ? 'Invalid Phone Number' : null,
+                                    validator: (val) {
+                                      if (val!.isEmpty) {
+                                        return 'Invalid Phone Number';
+                                      }
+                                      if (val.length != 8 || !RegExp(r'^\d+$').hasMatch(val)) {
+                                        return 'Phone Number must be 8 digits';
+                                      }
+                                      return null; // Return null if validation passes
+                                    },
                                   ),
                                   const SizedBox(height: 20),
                                   ElevatedButton(
