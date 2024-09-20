@@ -254,6 +254,7 @@ class _PostFormState extends State<PostForm> {
                                   filled: true,
                                   fillColor: Colors.grey[800],
                                   hintText: "What's on your mind?",
+                                  hintStyle: TextStyle(color: Colors.amber[900]!),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide.none,
@@ -270,6 +271,7 @@ class _PostFormState extends State<PostForm> {
                                   filled: true,
                                   fillColor: Colors.grey[800],
                                   hintText: "Price (optional)",
+                                   hintStyle: TextStyle(color: Colors.amber[900]!),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide.none,

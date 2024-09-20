@@ -181,22 +181,27 @@ class _ProfileState extends State<Profile> with SingleTickerProviderStateMixin {
                                     },
                                   ),
                                   const SizedBox(height: 20),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      if (formKey.currentState!.validate()) {
-                                        setState(() {
-                                          loading = true;
-                                        });
-                                        updateProfile();
-                                      }
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      foregroundColor: Colors.white,
-                                      backgroundColor: Colors.amber[900],
-                                      padding: const EdgeInsets.symmetric(vertical: 14),
-                                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  Center(
+                                    child: SizedBox(
+                                      width: 200, // Set the desired width here
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          if (formKey.currentState!.validate()) {
+                                            setState(() {
+                                              loading = true;
+                                            });
+                                            updateProfile();
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          foregroundColor: Colors.white,
+                                          backgroundColor: Colors.amber[900],
+                                          padding: const EdgeInsets.symmetric(vertical: 14),
+                                          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                        ),
+                                        child: const Text('Update'),
+                                      ),
                                     ),
-                                    child: const Text('Update'),
                                   ),
                                 ],
                               ),
